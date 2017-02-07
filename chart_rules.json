@@ -1,0 +1,18 @@
+{
+"toprules":{"charts":[
+{"chart":"CPU","description":"Total CPU load vs Process","legend":"CPU load","vaxislabel":"percents %","graphs":[{"name":"[CPU User+System]","rule":"CPU(User)\\+CPU(System)"},{"name":"[CPU User]","rule":"CPU(User)"},{"name":"CPU process","rule":"CPU%"}]},
+{"chart":"CPU Process","description":"","legend":"Process CPU load","vaxislabel":"percents %","graphs":[{"name":"CPU process","rule":"CPU%"}]},
+{"chart":"Threads","description":"","legend":"Amount of threads","vaxislabel":"number","graphs":[{"name":"Threads","rule":"#THR"}]},
+{"chart":"RSS","description":"","legend":"Memory kB","vaxislabel":"Memory kB","graphs":[{"name":"RSS","rule":"RSS"}]}
+]},
+"dumpsysrules":{"charts":[
+{"chart":"Pss_Total","description":"","legend":"TOTAL|Pss_Total","vaxislabel":"kB","graphs":[{"name":"Pss_Total","rule":"TOTAL|Pss_Total"}]},
+{"chart":"Private_Dirty","description":"","legend":"TOTAL|Private_Dirty","vaxislabel":"kB","graphs":[{"name":"Private_Dirty","rule":"TOTAL|Private_Dirty"}]},
+{"chart":"Private_Clean","description":"","legend":"TOTAL|Private_Clean","vaxislabel":"kB","graphs":[{"name":"Private_Clean","rule":"TOTAL|Private_Clean"}]},
+{"chart":"Swapped_Dirty","description":"","legend":"TOTAL|Swapped_Dirty","vaxislabel":"kB","graphs":[{"name":"Swapped_Dirty","rule":"TOTAL|Swapped_Dirty"}]},
+{"chart":"Heap_Size","description":"","legend":"TOTAL|Heap_Size","vaxislabel":"kB","graphs":[{"name":"Heap_Size","rule":"TOTAL|Heap_Size"}]},
+{"chart":"Heap_Alloc","description":"","legend":"TOTAL|Heap_Alloc","vaxislabel":"kB","graphs":[{"name":"Heap_Alloc","rule":"TOTAL|Heap_Alloc"}]},
+{"chart":"Heap_Free","description":"","legend":"TOTAL|Heap_Free","vaxislabel":"kB","graphs":[{"name":"Heap_Free","rule":"TOTAL|Heap_Free"}]},
+{"chart":"Views","description":"Amount of View Objects","legend":"Objects|Views","vaxislabel":"pcs","graphs":[{"name":"Views","rule":"Objects|Views"}]}
+]}
+}
