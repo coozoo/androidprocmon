@@ -1,3 +1,5 @@
+/* Author: Yuriy Kuzin
+ */
 #ifndef ADBEXECUTE_H
 #define ADBEXECUTE_H
 

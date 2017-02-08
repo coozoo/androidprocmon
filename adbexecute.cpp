@@ -1,3 +1,5 @@
+/* Author: Yuriy Kuzin
+ */
 #include "adbexecute.h"
 
 adbExecute::adbExecute(QMainWindow *parent) : QMainWindow(parent)
