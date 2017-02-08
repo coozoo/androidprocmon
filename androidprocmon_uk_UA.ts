@@ -8,6 +8,66 @@
         <source>MainWindow</source>
         <translation></translation>
     </message>
+    <message>
+        <location filename="mainwindow.cpp" line="14"/>
+        <source>Show about info</source>
+        <translation>Показати інформацію про</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="37"/>
+        <source>About</source>
+        <translation>Про...</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="40"/>
+        <source>Application targeted to make testers life easy :)&lt;br&gt;Monitor memory and CPU using top and dumpsys through ADB.&lt;br&gt;Log statistics to csv files, show charts etc...&lt;br&gt;&lt;br&gt;</source>
+        <translation>Прикладка призначена для полегшення життя тестерів :) &lt;br&gt;Для моніторингу пам&apos;яті та процесора за допомогою top та dumpsys використовуючи ADB&lt;br&gt;Логування статистики в csv файл, відображення графіків та ін... &lt;br&gt;&lt;br&gt;</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="41"/>
+        <source>Creator: </source>
+        <translation>Створено: </translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="42"/>
+        <source>Compiled with QT: </source>
+        <translation>Зібрано в QT: </translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="43"/>
+        <source>Runtime QT: </source>
+        <translation>Середовище QT: </translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="45"/>
+        <source>Compiler GCC: </source>
+        <translation>Компілятор GCC: </translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="47"/>
+        <source>MinGW32: </source>
+        <translation>MinGW32: </translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="50"/>
+        <source>MinGW64: </source>
+        <translation>MinGW64: </translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="54"/>
+        <source>Compiler clang: </source>
+        <translation>Компілятор clang: </translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="57"/>
+        <source>Compiler msvc: </source>
+        <translation>Компілятор msvc: </translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="59"/>
+        <source>Project sources: </source>
+        <translation>Сирці проекта: </translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
@@ -25,42 +85,42 @@
 <context>
     <name>adbExecute</name>
     <message>
-        <location filename="adbexecute.cpp" line="38"/>
+        <location filename="adbexecute.cpp" line="40"/>
         <source>SU</source>
         <translation>SU</translation>
     </message>
     <message>
-        <location filename="adbexecute.cpp" line="39"/>
+        <location filename="adbexecute.cpp" line="41"/>
         <source>Execute as root</source>
         <translation>Виконати як root</translation>
     </message>
     <message>
-        <location filename="adbexecute.cpp" line="58"/>
+        <location filename="adbexecute.cpp" line="60"/>
         <source>Execute Command in loop</source>
         <translation>Виконувати команду в циклі</translation>
     </message>
     <message>
-        <location filename="adbexecute.cpp" line="59"/>
+        <location filename="adbexecute.cpp" line="61"/>
         <source>Use Loop</source>
         <translation>Зациклити команду</translation>
     </message>
     <message>
-        <location filename="adbexecute.cpp" line="63"/>
+        <location filename="adbexecute.cpp" line="65"/>
         <source>Set Timeout to loop command</source>
         <translation>ВІнтервал для циклу</translation>
     </message>
     <message>
-        <location filename="adbexecute.cpp" line="65"/>
+        <location filename="adbexecute.cpp" line="67"/>
         <source>Execute</source>
         <translation>Виконати</translation>
     </message>
     <message>
-        <location filename="adbexecute.cpp" line="66"/>
+        <location filename="adbexecute.cpp" line="68"/>
         <source>Execute on device</source>
         <translation>Виконати команду на пристрої</translation>
     </message>
     <message>
-        <location filename="adbexecute.cpp" line="68"/>
+        <location filename="adbexecute.cpp" line="70"/>
         <source>Reset console connection</source>
         <translation>Скинути консоль</translation>
     </message>

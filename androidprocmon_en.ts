@@ -8,6 +8,66 @@
         <source>MainWindow</source>
         <translation></translation>
     </message>
+    <message>
+        <location filename="mainwindow.cpp" line="14"/>
+        <source>Show about info</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="37"/>
+        <source>About</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="40"/>
+        <source>Application targeted to make testers life easy :)&lt;br&gt;Monitor memory and CPU using top and dumpsys through ADB.&lt;br&gt;Log statistics to csv files, show charts etc...&lt;br&gt;&lt;br&gt;</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="41"/>
+        <source>Creator: </source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="42"/>
+        <source>Compiled with QT: </source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="43"/>
+        <source>Runtime QT: </source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="45"/>
+        <source>Compiler GCC: </source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="47"/>
+        <source>MinGW32: </source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="50"/>
+        <source>MinGW64: </source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="54"/>
+        <source>Compiler clang: </source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="57"/>
+        <source>Compiler msvc: </source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="59"/>
+        <source>Project sources: </source>
+        <translation></translation>
+    </message>
 </context>
 <context>
     <name>QObject</name>
@@ -25,42 +85,42 @@
 <context>
     <name>adbExecute</name>
     <message>
-        <location filename="adbexecute.cpp" line="38"/>
+        <location filename="adbexecute.cpp" line="40"/>
         <source>SU</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="adbexecute.cpp" line="39"/>
+        <location filename="adbexecute.cpp" line="41"/>
         <source>Execute as root</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="adbexecute.cpp" line="58"/>
+        <location filename="adbexecute.cpp" line="60"/>
         <source>Execute Command in loop</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="adbexecute.cpp" line="59"/>
+        <location filename="adbexecute.cpp" line="61"/>
         <source>Use Loop</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="adbexecute.cpp" line="63"/>
+        <location filename="adbexecute.cpp" line="65"/>
         <source>Set Timeout to loop command</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="adbexecute.cpp" line="65"/>
+        <location filename="adbexecute.cpp" line="67"/>
         <source>Execute</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="adbexecute.cpp" line="66"/>
+        <location filename="adbexecute.cpp" line="68"/>
         <source>Execute on device</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="adbexecute.cpp" line="68"/>
+        <location filename="adbexecute.cpp" line="70"/>
         <source>Reset console connection</source>
         <translation></translation>
     </message>
