@@ -39,6 +39,7 @@
 #include <QDir>
 #include <QFile>
 #include <QTimer>
+#include <QStringList>
 #include <QSpinBox>
 #include <QCompleter>
 #include <QStringListModel>
@@ -145,6 +146,8 @@ public:
 
     QComboBox *devicesList_combobox;
     void startlogcat();
+
+    QStringList policyList;
 
     void getSU();
 

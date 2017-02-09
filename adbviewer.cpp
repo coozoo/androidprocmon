@@ -11,6 +11,9 @@ adbViewer::adbViewer(QWidget *parent) : QWidget(parent)
     totalCPUBuffer="";
     processDumpsysAndroidVersion="";
     adbBinary=whereAdbExists();
+    //to handle over empty policy for an old android I need to know what policy need to be expected,
+    //in androis 7 "unk" and "er" where added I can't imagine what their purposes
+    policyList=QString("bg,fg,unk,er").split(",");
 
     //toolbox to place each section inside and layout for it
     main_gridlayout=new QGridLayout();
@@ -710,7 +713,8 @@ void adbViewer::getProcesslist()
                                                 {
                                                 // yes here it is pcy column id we are expecting to get bg or fg calues
                                                 // if it's something else then replace it with - and go to the next column of table
-                                                if(pcyColID!=-1 && coli==pcyColID && (columnvalue!="bg" && columnvalue!="fg" ))
+                                                //if(pcyColID!=-1 && coli==pcyColID && (columnvalue!="bg" && columnvalue!="fg" && columnvalue!="unk"))
+                                                if(pcyColID!=-1 && coli==pcyColID && !policyList.contains(columnvalue))
                                                 {
 
                                                    processList_model->setItem(rowj-1,coli,new QStandardItem(QString("-")));
@@ -886,7 +890,7 @@ void adbViewer::startProcessTopStat()
                     //actually here is the start top with delay parameter
                     //tried a lot of devices looks like this way should work
                     //to get system and process data
-                    QString command=adbBinary + " -s " + devicesList_combobox->currentText() + " shell top -d " + processTopStatTimeout_spinbox->text() + " | grep -E '" + processTopStatFilter_lineedit->text() +"$|User.*System'";
+                    QString command=adbBinary + " -s " + devicesList_combobox->currentText() + " shell top -d " + processTopStatTimeout_spinbox->text() + " | grep --line-buffered -E '" + processTopStatFilter_lineedit->text() +"$|User.*System'| cat";
                     cout<<command<<endl;
                     processTopStatExec->start(command);
                     processTopStatFilter_lineedit->setEnabled(false);
@@ -943,7 +947,7 @@ void adbViewer::processTopStatUpdateText()
     //timestamp date
     QString dt= QDateTime::currentDateTime().toString("dd/MM/yyyy_hh:mm:ss");
     QString appendText(processTopStatExec->readAll());
-    //qDebug()<<appendText;
+    qDebug()<<appendText;
 
     //pcyColID to handling old top empty policy
     int pcyColID=getHeaderIDbyNameOfProcessTopStat("PCY");
@@ -1079,7 +1083,8 @@ void adbViewer::processTopStatUpdateText()
                                         }
                                     else
                                         {
-                                        if(pcyColID!=-1 && coli==pcyColID && (columnvalue!="bg" && columnvalue!="fg" ))
+                                        //if(pcyColID!=-1 && coli==pcyColID && (columnvalue!="bg" && columnvalue!="fg"  && columnvalue!="unk"))
+                                        if(pcyColID!=-1 && coli==pcyColID && !policyList.contains(columnvalue))
                                         {
 
                                            processTopStat_model->setItem(rowj,coli,new QStandardItem(QString("-")));
@@ -1915,6 +1920,8 @@ QString adbViewer::whereAdbExists()
     cout<<"Choosing ADB path"<<endl;
     QStringList adbPath=QStringList();
 #ifdef Q_OS_MAC
+    adbPath.append(qApp->applicationDirPath() +"/androidprocmon.app/Contents/MacOS/adb");
+    adbPath.append(qApp->applicationDirPath() +"/adb");
     adbPath.append("./adb");
     adbPath.append("~/Library/Android/sdk/platform-tools/adb");
     adbPath.append("adb");
