@@ -40,7 +40,7 @@ FORMS    += mainwindow.ui
 
 
 win32:RC_FILE = myapp.rc
-macx:ICON = computer.icns
+macx:RC_FILE = computer.icns
 
 RESOURCES += \
     resources.qrc
