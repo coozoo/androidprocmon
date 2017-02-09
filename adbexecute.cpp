@@ -315,7 +315,7 @@ void adbExecute::on_execresult_plaintextedit_keyPress(QKeyEvent *e)
 void adbExecute::cmdUpdateError()
 {
     QString appendText(procexec->readAll());
-    execresult_plaintextedit->appendPlainText(appendText.toUtf8().replace("\r\n","\n"));
+    execresult_plaintextedit->appendPlainText(appendText.toUtf8().replace("\r","\n").replace("\n\n","\n"));
     QTextStream cout(stdout);
     cout<<appendText<<endl;
 }
@@ -327,39 +327,58 @@ void adbExecute::cmdUpdateError()
  */
 void adbExecute::cmdUpdateText()
 {
-    QString appendText(procexec->readAll());
+//    QTextStream cout(stdout);
+//    QString appendText(procexec->readAll());
+//    cout<<appendText<<endl;
 
-    QStringList wholeStringList;
-    wholeStringList=QString(appendText.toUtf8().replace("\r\n","\n")).split(QRegExp("[\n]"),QString::SkipEmptyParts);
-    foreach (QString str, wholeStringList)
-        {
-            if(str.contains("@") && str.contains(":/") && (str.contains("$") || str.contains("#")))
-                {
-                    execresult_plaintextedit->appendPlainText(str);
-                }
-            else
-                {
-                    #ifdef Q_OS_WIN
-                    execresult_plaintextedit->insertPlainText(str);
-                    #endif
-                    #if defined(Q_OS_LINUX) || defined(Q_OS_MAC)
-                    execresult_plaintextedit->insertPlainText(str+"\n");
-                    #endif
-                }
-        }
-//    QString appendText="";
-//    while(procexec->canReadLine()){
-//        QString line=procexec->readLine().trimmed();
-//        if(line!="")
-//           {
-//                if(line.contains("@") && line.contains(":/") && (line.contains("$") || line.contains("#")))
+//    QStringList wholeStringList;
+//    //wholeStringList=QString(appendText.toUtf8().replace("\r\n","\n")).split(QRegExp("[\n]"),QString::SkipEmptyParts);
+//    wholeStringList=QString(appendText.toUtf8().replace("\r","\n").replace("\n\n","\n")).split(QRegExp("[\n]"),QString::SkipEmptyParts);
+//    qDebug()<<wholeStringList;
+//    foreach (QString str, wholeStringList)
+//        {
+//            if(str.contains("@") && str.contains(":/") && (str.contains("$") || str.contains("#")))
 //                {
-//                    appendText=appendText+line+"\n";
+//                    execresult_plaintextedit->appendPlainText("\n"+str);
 //                }
+//            else
+//                {
+//                    execresult_plaintextedit->insertPlainText(str+"\n");
+//                }
+//        }
 
-//           }
-//      }
-//    execresult_plaintextedit->insertPlainText(appendText);
+    QString appendText="";
+    while(procexec->canReadLine()){
+        QString line=procexec->readLine().trimmed();
+        if(!line.isNull() && line!="" && !line.isEmpty())
+           {
+                if(line.contains("@") && line.contains(":/") && (line.contains("$") || line.contains("#")))
+                {
+                    appendText="\n"+appendText+line+"\n";
+                }
+                else
+                {
+                    appendText=appendText+line+"\n";
+                }
+           }
+      }
+    execresult_plaintextedit->insertPlainText(appendText);
+
+    appendText=procexec->readAll();
+        QStringList wholeStringList;
+        //wholeStringList=QString(appendText.toUtf8().replace("\r\n","\n")).split(QRegExp("[\n]"),QString::SkipEmptyParts);
+        wholeStringList=QString(appendText.toUtf8().replace("\r","\n").replace("\n\n","\n")).split(QRegExp("[\n]"),QString::SkipEmptyParts);
+        qDebug()<<wholeStringList;
+        foreach (QString str, wholeStringList)
+            {
+            if(!str.isNull() && str!="" && !str.isEmpty())
+            {
+                if(str.contains(":/") && (str.contains("$") || str.contains("#")))
+                    {
+                        execresult_plaintextedit->appendPlainText("\n"+str);
+                    }
+            }
+            }
 
 
     QTextCursor cursor(execresult_plaintextedit->textCursor());

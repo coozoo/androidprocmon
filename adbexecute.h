@@ -5,6 +5,7 @@
 
 #include <QObject>
 #include <QMainWindow>
+#include <QDebug>
 #include <QDockWidget>
 #include <QWidget>
 #include <QApplication>
