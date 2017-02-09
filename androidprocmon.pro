@@ -39,7 +39,8 @@ HEADERS  += mainwindow.h \
 FORMS    += mainwindow.ui
 
 
-RC_FILE = myapp.rc
+win32:RC_FILE = myapp.rc
+macx:ICON = computer.icns
 
 RESOURCES += \
     resources.qrc
