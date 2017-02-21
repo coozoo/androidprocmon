@@ -7,27 +7,77 @@ It's a tool that allow monitoring of android application with logging possibilit
 
 ## Installation
 You can get precompiled package for your OS here:
+
 https://github.com/coozoo/androidprocmon/releases
 
+If you prefer to compile it by yourself then see below. 
+
 ### Windows
-If you prefer to compile it by yourself. 
 Suppose you have installed and configured:
 * git
 * QT + MinGW (not sure that with MSVC it will works)
 
 Perform next steps:
  1. Download sources to your project dir:
-git clone https://github.com/coozoo/androidprocmon
+ 
+ `
+ git clone https://github.com/coozoo/androidprocmon
+ `
+
  2. Open QtCreator
 And open androidprocmon.pro
  3. Compile
  
-Optional:
- 4. place generated exe file to separate directory and run from commandline:
+  Optional of you want to run it outside qtcreator:
+ 4. place generated exe file to separate directory and run from commandline (or perform manual copy of ddls):
    
-   windeployqt androidprocmon.exe
+   `windeployqt androidprocmon.exe`
 
 
 ### Mac OSx
+Suppose you have installed and configured:
+- xCode
+- QT (it should work fine with clang or gcc)
+
+Perform next steps:
+ 1. Create dir to build project and change current dir to created one:
+ 
+ ```shell
+ $ cd ~
+ 
+ $ mkdir proj
+ 
+ $ cd proj
+ ```
+ 
+ 2. Download sources to your project dir and browse to it:
+ 
+ `shell
+ $ git clone https://github.com/coozoo/androidprocmon
+ 
+ $ cd androidprocmon
+ `
+ 
+ 3. Try if it's compiling. Open QtCreator
+ 
+ And open androidprocmon.pro
+ 
+ 4. Compile. In case of success continue if no try to find what's wrong.
+ 
+ 5. open MAC_build_RELEASE.sh and change variables if needed:
+ 
+  - QT_DIR 
+  - BIN_DIR 
+  
+ 6. make script executable and run this script
+ 
+ `shell
+ $ chmod 777 MAC_build_RELEASE.sh
+ $ ./MAC_build_RELEASE.sh
+ `
+ 
+ If everything goes fine you will find deployed androidprocmon.app inside working dir.
+
+
 ### Linux
 
