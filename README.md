@@ -28,7 +28,7 @@ Perform next steps:
 And open androidprocmon.pro
  3. Compile
  
-  Optional of you want to run it outside qtcreator:
+  Optionaly if you want to run it outside qtcreator:
  4. place generated exe file to separate directory and run from commandline (or perform manual copy of ddls):
    
    `windeployqt androidprocmon.exe`
@@ -66,8 +66,8 @@ Perform next steps:
  
  5. open MAC_build_RELEASE.sh and change variables if needed:
  
-  - QT_DIR 
-  - BIN_DIR 
+  - QT_DIR - path to your QT
+  - BIN_DIR - folder to build
   
  6. make script executable and run this script
  
@@ -80,4 +80,4 @@ Perform next steps:
 
 
 ### Linux
-
+Currently there I didn't released any 
