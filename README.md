@@ -80,4 +80,4 @@ Perform next steps:
 
 
 ### Linux
-Currently there I didn't released any 
+Currently no any released
