@@ -112,3 +112,68 @@ Suppose you have installed QT5 (on fedora you can do that # dnf install qt5*):
  ```
 
 ## Configuration
+###Translations
+Included languages are only:
+
+English - androidprocmon_en
+
+Ukrainian - androidprocmon_uk_UA
+
+.ts-translations, .qm-compiled translations
+
+So .ts translations files you can use to create your own translation.
+
+Compiled translations .qm should be placed inside "lang" folder which should be placed beside binary.
+
+###ADB place
+The main component of this tool it's adb.
+There is few predefined locations of adb tool but the better way to place it beside binary (exe file). So application will definitely find it.
+
+###Command history
+File "exec_history" is created automatically to log commands that executed on "Execute" so it's some kind of ".bash_history". 
+
+So it's simply list of strings. File placed beside binary.
+
+###Filter list
+File "filters_list" its purpose is to save filters list to filter logcat messages.
+Can be created manually. File placed beside binary.
+
+It is csv like file and has next format:
+```
+FILTER,isRegex
+
+FILTER - it's a word or regex to filter logcat;
+isRegex - true/false is it regular expression or not.
+```
+
+###Chart Rules
+File "chart_rules.json" contains the rules how much charts and what date they drawing. File placed beside binary.
+Attention rules handler very stupid  so it can work wrongly, maybe later I will reimplement it.
+
+You can copy included "chart_rules.json" file and place it beside binary.
+
+Format next:
+- two main objects "toprules" and "dumpsysrules";
+- inside each section there is "charts" array of chart objects:
+ - "chart" name of chart dock window;
+ - "description" simple description;
+ - "legend" name of chart over plot area;
+ - "vaxislabel" axis lable actually what we are mesuaring.
+- "graphs" array of graph (lines) objects:
+ - "name" actually name of line;
+ - "rule" actually what will be used as value for this line, it's name of column from the top and dumpsys table, can be used some simple operations like summ, division, multiplication (just try how it works and maybe you will find which one will work).
+
+Example:
+```json
+{
+"toprules":{"charts":[
+{"chart":"CPU","description":"Total CPU load vs Process","legend":"CPU load","vaxislabel":"percents %","graphs":[{"name":"[CPU User+System]","rule":"CPU(User)\\+CPU(System)"},{"name":"[CPU User]","rule":"CPU(User)"},{"name":"CPU process","rule":"CPU%"}]}
+]},
+"dumpsysrules":{"charts":[
+{"chart":"Pss_Total","description":"","legend":"TOTAL|Pss_Total","vaxislabel":"kB","graphs":[{"name":"Pss_Total","rule":"TOTAL|Pss_Total"}]},
+{"chart":"Private_Dirty","description":"","legend":"TOTAL|Private_Dirty","vaxislabel":"kB","graphs":[{"name":"Private_Dirty","rule":"TOTAL|Private_Dirty"}]}
+]}
+}
+```
+
+##How to use it
