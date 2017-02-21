@@ -72,12 +72,43 @@ Perform next steps:
  6. make script executable and run this script
  
  `shell
+ 
  $ chmod 777 MAC_build_RELEASE.sh
+ 
  $ ./MAC_build_RELEASE.sh
+ 
  `
  
  If everything goes fine you will find deployed androidprocmon.app inside working dir.
 
 
 ### Linux
-Currently no any released
+Currently no any release for linux becuase of different dependencies so it's (suppose I will add some for fedora and debian). But now you need to compile it:
+
+Suppose you have installed QT5 (on fedora you can do that # dnf install qt5*):
+ 1. Create dir to build project and change current dir to created one:
+ 
+ ```shell
+ $ cd ~
+ 
+ $ mkdir proj
+ 
+ $ cd proj
+ ```
+ 
+ 2. Download sources to your project dir and browse to it:
+ 
+ ```shell
+ $ git clone https://github.com/coozoo/androidprocmon
+ 
+ $ cd androidprocmon
+ ```
+ 3. Compile by executing next commands (maybe you need to use qmake if default is qt5):
+ 
+ ```shell
+ $ qmake-qt5
+ 
+ $ make
+ ```
+
+## Configuration
