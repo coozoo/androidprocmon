@@ -52,11 +52,11 @@ Perform next steps:
  
  2. Download sources to your project dir and browse to it:
  
- `shell
+ ```shell
  $ git clone https://github.com/coozoo/androidprocmon
  
  $ cd androidprocmon
- `
+ ```
  
  3. Try if it's compiling. Open QtCreator
  
