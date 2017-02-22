@@ -247,9 +247,12 @@ If everything fine you will see devices list on the top of "ADB manager" tab aft
    
    Images are saved here in the "saved_charts" folder and arranged by folders with date when save button has been pressed.
    
-   ###ADB logcat viwer
-   
-   
+   ###ADB logcat viewer
+   There is posibility to view logcat.
+   Simply mark "Enable" checkbox on the top left corner. And application will start logcat.
+   Below there is another "Enable" checkbox related to filter section it will filter all messages by word or regexp.
+   It is sometimes very useful to filter just some exceptions.
+   <img src="https://cloud.githubusercontent.com/assets/25594311/23214289/c106e974-f916-11e6-93e5-3ceb397aee20.png" width="50%"></img>
 
 
 
