@@ -199,13 +199,16 @@ Now you can run application.
 If everything fine you will see devices list on the top of "ADB manager" tab after start, there is refresh button to update list of devices if connected after application start.
 
  1. Select device what you want a deal with:
+ 
     <img src="https://cloud.githubusercontent.com/assets/25594311/23210848/0651a226-f908-11e6-9a68-6a30c58b4293.png" width="50%"></img> 
 
  2. Go to "Process List" section and press refresh button to get the process list from device
    * Note: maybe you will see message on your android device about accept connection. Accept it, mark remember if you want, and press refresh again.
+   
      <img src="https://cloud.githubusercontent.com/assets/25594311/23210845/0650ad6c-f908-11e6-99cb-6434aed82b95.png" width="50%"></img> 
 
  3. Select the process that you want to monitor, right click on it and select "Monitor Process" from context menu
+ 
     <img src="https://cloud.githubusercontent.com/assets/25594311/23210846/0650e930-f908-11e6-90b9-22866ed4cec3.png" width="50%"></img> 
 
  4. This process will be automatically added "Top Process Stat Log" and "Dumpsys Proc meminfo" sections. Arrows on them will be green to indicate that monitoring active.
@@ -225,12 +228,13 @@ If everything fine you will see devices list on the top of "ADB manager" tab aft
    * There is "Range" spinbox. You can set start size in minutes of plot area, as much as more data added it will compress it to fit into plot area. Flow checkbox allow you to left only last data of range, so if range 10 minutes then only last 10 minutes will be on chart.
 
    * Another possibility to save all charts as images by pressing button with floppy icon
+   
    <img src="https://cloud.githubusercontent.com/assets/25594311/23210849/0653cd80-f908-11e6-984c-6baea369971e.png" width="50%"></img>
 
  6. All logged data and images are saved to "stats" folder
  
    * under windows "stats" folder beside exe file
-   * linux and mac stats folder is inside the user dir `$ cd ~/androidprocmon/stats`
+   * linux and mac "stats" folder is inside the user dir `$ cd ~/androidprocmon/stats`
    
    Inside "stats" folder you will find folders with dates:
    dd.MM.yyyy_hh.mm.ss.xxx
