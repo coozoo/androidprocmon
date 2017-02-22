@@ -198,34 +198,51 @@ Now you can run application.
 ###Monitor Some process
 If everything fine you will see devices list on the top of "ADB manager" tab after start, there is refresh button to update list of devices if connected after application start.
 
-1. Select device what you want a deal with:
-<img src="" width="50%"></img> 
+ 1. Select device what you want a deal with:
+    <img src="" width="50%"></img> 
 
-2. Go to "Process List" section and press refresh button to get the process list from device
- * Note: maybe you will see message on your android device about accept connection. Accept it, mark remember if you want, and press refresh again.
-<img src="" width="50%"></img> 
+ 2. Go to "Process List" section and press refresh button to get the process list from device
+   * Note: maybe you will see message on your android device about accept connection. Accept it, mark remember if you want, and press refresh again.
+     <img src="" width="50%"></img> 
 
-3. Select the process that you want to monitor, right click on it and select "Monitor Process" from context menu
-<img src="" width="50%"></img> 
+ 3. Select the process that you want to monitor, right click on it and select "Monitor Process" from context menu
+    <img src="" width="50%"></img> 
 
-4. This process will be automatically added "Top Process Stat Log" and "Dumpsys Proc meminfo" sections. Arrows on them will be green to indicate that monitoring active.
- * lineedit to enter process name;
- * delay how often request data, default is 5 seconds;
- * "Stop" button to stop monitoring;
- * "Log" checkbox if marked then write to file (marked by default);
- * "Clear" button to clear stats in table.
+ 4. This process will be automatically added "Top Process Stat Log" and "Dumpsys Proc meminfo" sections. Arrows on them will be green to indicate that monitoring active.
+   * lineedit to enter process name;
+   * delay how often request data, default is 5 seconds;
+   * "Stop" button to stop monitoring;
+   * "Log" checkbox if marked then write to file (marked by default);
+   * "Clear" button to clear stats in table.
+    Exactly the same set of elements for dumpsys section.
+    
+    <img src="" width="50%"></img>
+    
+ 5. Now you can go to "Chart Manager" tab
+    Here you will see online data on charts. 
+    Every chart can be deattached and placed back by double clciking on windod header.
 
-Exactly the same set of elements for dumpsys section.
-<img src="" width="50%"></img>
+   * There is "Range" spinbox. You can set start size in minutes of plot area, as much as more data added it will compress it to fit into plot area. Flow checkbox allow you to left only last data of range, so if range 10 minutes then only last 10 minutes will be on chart.
 
-5. Now you can go to "Chart Manager" tab
+   * Another possibility to save all charts as images by pressing button with floppy icon
+   <img src="" width="50%"></img>
 
-Here you will see online data on charts. 
+ 6. All logged data and images are saved to "stats" folder
+ 
+   * under windows "stats" folder beside exe file
+   * linux and mac stats folder is inside the user dir `$ cd ~/androidprocmon/stats`
+   
+   Inside "stats" folder you will find folders with dates:
+   dd.MM.yyyy_hh.mm.ss.xxx
+   
+   Inside each folder there .csv log files for top and dumpsys tables:
+   NameOfProcess_pid_top.csv
+   NameOfProcess_31683_dumpsys.csv
+   
+   Images are saved here in the "saved_charts" folder and arranged by folders with date when save button has been pressed.
+   
+   
+   
 
-Every chart can be deattached and placed back by double clciking on windod header.
-
-* There is "Range" spinbox. You can set start size in minutes of plot area, as much as more data added it will compress it to fit into plot area. Flow checkbox allow you to left only last data of range, so if range 10 minutes then only last 10 minutes will be on chart.
-
-* 
 
 
