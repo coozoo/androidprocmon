@@ -237,14 +237,17 @@ If everything fine you will see devices list on the top of "ADB manager" tab aft
    * linux and mac "stats" folder is inside the user dir `$ cd ~/androidprocmon/stats`
    
    Inside "stats" folder you will find folders with dates:
+   
    dd.MM.yyyy_hh.mm.ss.xxx
    
    Inside each folder there .csv log files for top and dumpsys tables:
+   
    NameOfProcess_pid_top.csv
    NameOfProcess_31683_dumpsys.csv
    
    Images are saved here in the "saved_charts" folder and arranged by folders with date when save button has been pressed.
    
+   ###ADB logcat viwer
    
    
 
