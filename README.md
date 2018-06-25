@@ -233,11 +233,11 @@ If everything fine you will see devices list on the top of "ADB manager" tab aft
     
  5. Now you can go to "Chart Manager" tab
     Here you will see online data on charts. 
-    Every chart can be deattached and placed back by double clciking on windod header.
+    Every chart can be deattached and placed back by double clciking on window header.
 
    * There is "Range" spinbox. You can set start size in minutes of plot area, as much as more data added it will compress it to fit into plot area. Flow checkbox allow you to left only last data of range, so if range 10 minutes then only last 10 minutes will be on chart.
 
-   * Another possibility to save all charts as images by pressing button with floppy icon
+   * Another possibility it's to save all charts as images by pressing button with floppy icon
    
    <img src="https://cloud.githubusercontent.com/assets/25594311/23210849/0653cd80-f908-11e6-984c-6baea369971e.png" width="50%"></img>
 
