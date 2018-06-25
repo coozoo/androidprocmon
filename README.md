@@ -29,6 +29,7 @@ And open androidprocmon.pro
  3. Compile
  
   Optionaly if you want to run it outside qtcreator:
+  
  4. place generated exe file to separate directory and run from commandline (or perform manual copy of ddls):
    
    `windeployqt androidprocmon.exe`
@@ -112,7 +113,7 @@ Suppose you have installed QT5 (on fedora you can do that # dnf install qt5*):
  ```
 
 ## Configuration
-###Translations
+### Translations
 Included languages are only:
 
 English - androidprocmon_en
@@ -125,20 +126,26 @@ So .ts translations files you can use to create your own translation.
 
 Compiled translations .qm should be placed inside "lang" folder which should be placed beside binary.
 
-###ADB place
+### ADB place
+
 The main component of this tool it's adb.
+
 There is few predefined locations of adb tool but the better way to place it beside binary (exe file). So application will definitely find it.
 
-###Command history
+### Command history
+
 File "exec_history" is created automatically to log commands that executed on "Execute" so it's some kind of ".bash_history". 
 
 So it's simply list of strings. File placed beside binary.
 
-###Filter list
+### Filter list
+
 File "filters_list" its purpose is to save filters list to filter logcat messages.
+
 Can be created manually. File placed beside binary.
 
 It is csv like file and has next format:
+
 ```
 FILTER,isRegex
 
@@ -146,8 +153,10 @@ FILTER - it's a word or regex to filter logcat;
 isRegex - true/false is it regular expression or not.
 ```
 
-###Chart Rules
+### Chart Rules
+
 File "chart_rules.json" contains the rules how much charts and what date they drawing. File placed beside binary.
+
 Attention rules handler very stupid  so it can work wrongly, maybe later I will reimplement it.
 
 You can copy included "chart_rules.json" file and place it beside binary.
@@ -176,7 +185,8 @@ Example:
 }
 ```
 
-##How to use it
+## How to use it
+
 First at all you need to enable USB debugging to do that:
 
 1. Go to android settings and scroll down;
@@ -195,7 +205,8 @@ First at all you need to enable USB debugging to do that:
 
 Now you can run application.
 
-###Monitor Some process
+### Monitor Some process
+
 If everything fine you will see devices list on the top of "ADB manager" tab after start, there is refresh button to update list of devices if connected after application start.
 
  1. Select device what you want a deal with:
@@ -247,7 +258,7 @@ If everything fine you will see devices list on the top of "ADB manager" tab aft
    
    Images are saved here in the "saved_charts" folder and arranged by folders with date when save button has been pressed.
    
-   ###ADB logcat viewer
+   ### ADB logcat viewer
    There is posibility to view logcat.
    Simply mark "Enable" checkbox on the top left corner. And application will start logcat.
    Below there is another "Enable" checkbox related to filter section it will filter all messages by word or regexp.
