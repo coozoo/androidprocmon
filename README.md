@@ -229,7 +229,6 @@ If everything fine you will see devices list on the top of "ADB manager" tab aft
    * "Log" checkbox if marked then write to file (marked by default);
    * "Clear" button to clear stats in table.
     Exactly the same set of elements for dumpsys section.
-    
     <img src="https://cloud.githubusercontent.com/assets/25594311/23210847/0651474a-f908-11e6-8201-38e315c20235.png" width="50%"></img>
     
  5. Now you can go to "Chart Manager" tab
