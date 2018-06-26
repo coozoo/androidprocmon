@@ -155,9 +155,9 @@ isRegex - true/false is it regular expression or not.
 
 ### Chart Rules
 
-File "chart_rules.json" contains the rules how much charts and what date they drawing. File placed beside binary.
+File "chart_rules.json" contains the rules how many charts will be appeared and what data they drawing. File placed beside binary.
 
-Attention rules handler very stupid  so it can work wrongly, maybe later I will reimplement it.
+Attention rules handler very stupid  so it can work improperly, maybe later I will reimplement it.
 
 You can copy included "chart_rules.json" file and place it beside binary.
 
