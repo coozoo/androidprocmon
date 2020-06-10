@@ -14,7 +14,7 @@ CODECFORSRC = UTF-8
 TEMPLATE = app
 
 CONFIG += c++11
-
+CONFIG += lrelease
 
 SOURCES += main.cpp\
         mainwindow.cpp \
@@ -46,3 +46,13 @@ RESOURCES += \
     resources.qrc
 
 DISTFILES +=
+
+binary.files += $$TARGET
+binary.path = /usr/bin
+translations.files += $$files(.qm/*.qm,true)
+translations.path = /usr/share/$$TARGET
+icon.files +=iamges/computer.png
+icon.path += /usr/share/icons
+desktop.files += $$TARGET.desktop
+desktop.path += /usr/share/applications/
+INSTALLS += binary translations icon desktop
