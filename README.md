@@ -1,7 +1,7 @@
 # Android Process Monitor (androidprocmon)
 
 ## Summary
-It's a tool that allow monitoring of android application with logging possibility through ADB. Actually it's some kind of UI for adb and tools on android device - top and dumpsys. There is chart represantation of live data, possibility to execute command on device and somekind of interface for logcat. So it's very good when you need to test your applicatuion on android device and monitor resources.
+It's a tool that allow monitoring of android application with logging possibility through ADB. Actually it's some kind of UI for adb and tools on android device - top and dumpsys. There is chart representation of live data, possibility to execute command on device and some kind of interface for logcat. So it's very good when you need to test your application on android device and monitor resources.
 
 <img src="https://cloud.githubusercontent.com/assets/25594311/23156611/5b34452a-f820-11e6-9ba3-07fba869ef3c.png" width="60%"></img> 
 
@@ -28,9 +28,9 @@ Perform next steps:
 And open androidprocmon.pro
  3. Compile
  
-  Optionaly if you want to run it outside qtcreator:
+  Optionally if you want to run it outside qtcreator:
   
- 4. place generated exe file to separate directory and run from commandline (or perform manual copy of ddls):
+ 4. place generated exe file to separate directory and run from command line (or perform manual copy of ddls):
    
    `windeployqt androidprocmon.exe`
 
@@ -84,7 +84,7 @@ Perform next steps:
 
 
 ### Linux
-Currently no any release for linux becuase of different dependencies so it's (suppose I will add some for fedora and debian). But now you need to compile it:
+Currently no any release for linux because of different dependencies so it's (suppose I will add some for fedora and debian). But now you need to compile it:
 
 Suppose you have installed QT5 (on fedora you can do that # dnf install qt5*):
  1. Create dir to build project and change current dir to created one:
@@ -167,10 +167,10 @@ Format next:
  - "chart" name of chart dock window;
  - "description" simple description;
  - "legend" name of chart over plot area;
- - "vaxislabel" axis lable actually what we are mesuaring.
+ - "vaxislabel" axis lable actually what we are measuring.
 - "graphs" array of graph (lines) objects:
  - "name" actually name of line;
- - "rule" actually what will be used as value for this line, it's name of column from the top and dumpsys table, can be used some simple operations like summ, division, multiplication (just try how it works and maybe you will find which one will work).
+ - "rule" actually what will be used as value for this line, it's name of column from the top and dumpsys table, can be used some simple operations like sum, division, multiplication (just try how it works and maybe you will find which one will work).
 
 Example:
 ```json
@@ -233,7 +233,7 @@ If everything fine you will see devices list on the top of "ADB manager" tab aft
     
  5. Now you can go to "Chart Manager" tab
     Here you will see online data on charts. 
-    Every chart can be deattached and placed back by double clciking on window header.
+    Every chart can be detached and placed back by double clicking on window header.
 
    * There is "Range" spinbox. You can set start size in minutes of plot area, as much as more data added it will compress it to fit into plot area. Flow checkbox allow you to left only last data of range, so if range 10 minutes then only last 10 minutes will be on chart.
 
@@ -253,12 +253,12 @@ If everything fine you will see devices list on the top of "ADB manager" tab aft
    Inside each folder there .csv log files for top and dumpsys tables:
    
    NameOfProcess_pid_top.csv
-   NameOfProcess_31683_dumpsys.csv
+   NameOfProcess_pid_dumpsys.csv
    
    Images are saved here in the "saved_charts" folder and arranged by folders with date when save button has been pressed.
    
    ### ADB logcat viewer
-   There is posibility to view logcat.
+   There is possibility to view logcat.
    Simply mark "Enable" checkbox on the top left corner. And application will start logcat.
    Below there is another "Enable" checkbox related to filter section it will filter all messages by word or regexp.
    It is sometimes very useful to filter just some exceptions.
