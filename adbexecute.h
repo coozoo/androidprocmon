@@ -22,6 +22,8 @@
 #include <QPushButton>
 #include <QTimer>
 #include <QTextStream>
+#include <QStandardPaths>
+#include <QDir>
 #include "qplaintexteditcursor.h"
 
 class adbExecute : public QMainWindow
@@ -35,10 +37,14 @@ class adbExecute : public QMainWindow
            READ getandroidDevice
            WRITE setandroidDevice
         )
+    Q_PROPERTY(QString historyDir
+           READ gethistoryDir
+           WRITE sethistoryDir
+        )
 
 
 public:
-    explicit adbExecute(QMainWindow *parent = 0);
+    explicit adbExecute(QMainWindow *parent = nullptr);
     ~adbExecute();
 
     //execute command section
@@ -74,12 +80,19 @@ public:
     }
     QString getandroidDevice() const
     { return androidDevice; }
+    void sethistoryDir(QString m_historyDir)
+    {
+        historyDir = m_historyDir;
+    }
+    QString gethistoryDir() const
+    { return historyDir; }
 
 
 private:
     QTimer executeUseLoopTimer;
     QString adbBinary;
     QString androidDevice;
+    QString historyDir;
     QStringList tabSuggest_stringlist;
 
 signals:

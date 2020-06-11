@@ -4,43 +4,51 @@
 
 adbExecute::adbExecute(QMainWindow *parent) : QMainWindow(parent)
 {
-    modelCursor=-1;
-
+    modelCursor = -1;
+#ifdef Q_OS_WIN
+    sethistoryDir(qApp->applicationDirPath());
+#endif
+#if defined(Q_OS_LINUX) || defined(Q_OS_MAC)
+    sethistoryDir(QStandardPaths::standardLocations(QStandardPaths::ConfigLocation)[0] + "/" + qAppName());
+#endif
+    QTextStream cout(stdout);
+    cout<<gethistoryDir()<<endl;
+    QDir().mkpath(gethistoryDir()) ;
     //read history from file
-    QStringList wordList=ReadFullFile("exec_history").split("\n");
+    QStringList wordList = ReadFullFile("exec_history").split("\n");
     //QSet<QString> wordset=wordList.toSet();
     //wordList=wordset.toList();
 
     //inverse strings from history file to make appear latest on top of completer (got this oneliner somwhere from stackowerflow)
-    for(int k = 0; k < (wordList.size()/2); k++) wordList.swap(k,wordList.size()-(1+k));
+    for (int k = 0; k < (wordList.size() / 2); k++) wordList.swap(k, wordList.size() - (1 + k));
     //leave only unique strings to update history file later
     QStringList wordListUnique;
-    for(int k = 0; k < wordList.count(); k++)
-    {
-        if(wordList[k]!="" && !wordListUnique.contains(wordList[k],Qt::CaseSensitive))
+    for (int k = 0; k < wordList.count(); k++)
         {
-            wordListUnique.append(wordList[k]);
+            if (wordList[k] != "" && !wordListUnique.contains(wordList[k], Qt::CaseSensitive))
+                {
+                    wordListUnique.append(wordList[k]);
+                }
         }
-    }
     //set completer to suggest commands when you typing into execute field
     completer = new QCompleter(wordListUnique);
     completer->setMaxVisibleItems(10);
     completer->setCompletionMode(QCompleter::PopupCompletion);
 
     //execute field with history commands
-    execute_lineedit=new QLineEdit();
+    execute_lineedit = new QLineEdit();
     execute_lineedit->setCompleter(completer);
     execute_lineedit->installEventFilter(this);
     //connect completer with command history when you selecting somethig to slot
-    connect(completer,SIGNAL(activated(QString)),this,SLOT(on_completer_activated(QString)),Qt::QueuedConnection);
+    connect(completer, SIGNAL(activated(QString)), this, SLOT(on_completer_activated(QString)), Qt::QueuedConnection);
 
     //execute section
     //try to get su while executing commands
-    procexecGetSU_checkbox=new QCheckBox();
+    procexecGetSU_checkbox = new QCheckBox();
     procexecGetSU_checkbox->setText(tr("SU"));
     procexecGetSU_checkbox->setToolTip(tr("Execute as root"));
     //plaintextedit to show it like command line style
-    execresult_plaintextedit=new QPlainTextEditCursor();
+    execresult_plaintextedit = new QPlainTextEditCursor();
     //QFont font("unexistent");
     QFont font("Courier New");
     font.setStyleHint(QFont::Monospace);
@@ -54,32 +62,32 @@ adbExecute::adbExecute(QMainWindow *parent) : QMainWindow(parent)
     execresult_plaintextedit->setTextInteractionFlags(execresult_plaintextedit->textInteractionFlags() | Qt::TextSelectableByKeyboard);
 
     //execute section composing
-    QGridLayout *execute_gridlayout=new QGridLayout();
-    QGroupBox *execute_groupbox=new QGroupBox();
-    executeUseLoop_checkbox=new QCheckBox();
+    QGridLayout *execute_gridlayout = new QGridLayout();
+    QGroupBox *execute_groupbox = new QGroupBox();
+    executeUseLoop_checkbox = new QCheckBox();
     executeUseLoop_checkbox->setToolTip(tr("Execute Command in loop"));
     executeUseLoop_checkbox->setText(tr("Use Loop"));
-    executeUseLoopDelay_spinbox=new QSpinBox();
+    executeUseLoopDelay_spinbox = new QSpinBox();
     executeUseLoopDelay_spinbox->setMinimum(1);
     executeUseLoopDelay_spinbox->setValue(5);
     executeUseLoopDelay_spinbox->setToolTip(tr("Set Timeout to loop command"));
-    executeCommand_pushbutton=new QPushButton();
+    executeCommand_pushbutton = new QPushButton();
     executeCommand_pushbutton->setText(tr("Execute"));
     executeCommand_pushbutton->setToolTip(tr("Execute on device"));
-    resetConsole_toolbutton=new QToolButton;
+    resetConsole_toolbutton = new QToolButton;
     resetConsole_toolbutton->setToolTip(tr("Reset console connection"));
     resetConsole_toolbutton->setIcon(QIcon(QPixmap(":/images/error.png")));
     execute_groupbox->setLayout(execute_gridlayout);
-    execute_gridlayout->addWidget(procexecGetSU_checkbox,0,0);
-    execute_gridlayout->addWidget(executeUseLoop_checkbox,0,1);
-    execute_gridlayout->addWidget(executeUseLoopDelay_spinbox,0,2);
-    execute_gridlayout->addWidget(execresult_plaintextedit,1,0,1,3);
-    execute_gridlayout->addWidget(execute_lineedit,2,0);
-    execute_gridlayout->addWidget(executeCommand_pushbutton,2,1);
-    execute_gridlayout->addWidget(resetConsole_toolbutton,2,2);
+    execute_gridlayout->addWidget(procexecGetSU_checkbox, 0, 0);
+    execute_gridlayout->addWidget(executeUseLoop_checkbox, 0, 1);
+    execute_gridlayout->addWidget(executeUseLoopDelay_spinbox, 0, 2);
+    execute_gridlayout->addWidget(execresult_plaintextedit, 1, 0, 1, 3);
+    execute_gridlayout->addWidget(execute_lineedit, 2, 0);
+    execute_gridlayout->addWidget(executeCommand_pushbutton, 2, 1);
+    execute_gridlayout->addWidget(resetConsole_toolbutton, 2, 2);
 
 
-    QDockWidget *execute_dockwidget=new QDockWidget("ADB shell",parent);
+    QDockWidget *execute_dockwidget = new QDockWidget("ADB shell", parent);
     //QDockWidget *execute_dockwidget = qobject_cast<QDockWidget*>(execute_titledockwidget);
     //execute_dockwidget->setFloating( !execute_dockwidget->isFloating () );
     //execute_dockwidget->showMaximized();
@@ -92,24 +100,24 @@ adbExecute::adbExecute(QMainWindow *parent) : QMainWindow(parent)
 
 
     //command line process
-    procexec=new QProcess();
+    procexec = new QProcess();
 
     //append string to file by emitted signal
-    connect(this,SIGNAL(AppendStringToFileSignal(QString,QString)),this,SLOT(on_AppendStringToFile(QString,QString)));
+    connect(this, SIGNAL(AppendStringToFileSignal(QString, QString)), this, SLOT(on_AppendStringToFile(QString, QString)));
 
     // execute command button and enter in command line calls the same slot
-    connect(executeCommand_pushbutton,SIGNAL(clicked()),this,SLOT(on_executeCommand_pushbutton_clicked()));
-    connect(execute_lineedit,SIGNAL(returnPressed()),this,SLOT(on_executeCommand_pushbutton_clicked()));
+    connect(executeCommand_pushbutton, SIGNAL(clicked()), this, SLOT(on_executeCommand_pushbutton_clicked()));
+    connect(execute_lineedit, SIGNAL(returnPressed()), this, SLOT(on_executeCommand_pushbutton_clicked()));
     //get su checkbox to get root access
-    connect(procexecGetSU_checkbox,SIGNAL(clicked()),this,SLOT(on_procexecGetSU_checkbox_clicked()));
+    connect(procexecGetSU_checkbox, SIGNAL(clicked()), this, SLOT(on_procexecGetSU_checkbox_clicked()));
 
     //execute command line lost connection
-    connect(procexec,SIGNAL(finished(int)),this,SLOT(on_procexec_closed(int)));
+    connect(procexec, SIGNAL(finished(int)), this, SLOT(on_procexec_closed(int)));
 
     //catches keypresses over plaintextedit area
-    connect(execresult_plaintextedit,SIGNAL(keyPressed(QKeyEvent*)),this,SLOT(on_execresult_plaintextedit_keyPress(QKeyEvent*)));
+    connect(execresult_plaintextedit, SIGNAL(keyPressed(QKeyEvent *)), this, SLOT(on_execresult_plaintextedit_keyPress(QKeyEvent *)));
     //reset console it will on button to replace ctrl+c functio in console it will kill process
-    connect(resetConsole_toolbutton,SIGNAL(clicked()),this,SLOT(on_resetConsole_toolbutton_clicked()));
+    connect(resetConsole_toolbutton, SIGNAL(clicked()), this, SLOT(on_resetConsole_toolbutton_clicked()));
 
     //read all outputs from command line executor
     connect(procexec, SIGNAL(readyReadStandardError()), this, SLOT(cmdUpdateError()));
@@ -118,12 +126,12 @@ adbExecute::adbExecute(QMainWindow *parent) : QMainWindow(parent)
     connect(&executeUseLoopTimer, SIGNAL(timeout()), this, SLOT(on_executeUseLoopTimer()));
 
     //emitted siganl to override file
-    connect(this,SIGNAL(RewriteFullFileSignal(QString,QString)),this,SLOT(on_RewriteFullFileSignal(QString,QString)));
+    connect(this, SIGNAL(RewriteFullFileSignal(QString, QString)), this, SLOT(on_RewriteFullFileSignal(QString, QString)));
 
     //yeah I know it's a stupid to swap, traverse, inverse, blablabla.. but I'm generating stupid things
     //traverse back and update history file with unique only
-    for(int k = 0; k < (wordListUnique.size()/2); k++) wordListUnique.swap(k,wordListUnique.size()-(1+k));
-    emit RewriteFullFileSignal("exec_history",wordListUnique.join("\n"));
+    for (int k = 0; k < (wordListUnique.size() / 2); k++) wordListUnique.swap(k, wordListUnique.size() - (1 + k));
+    emit RewriteFullFileSignal("exec_history", wordListUnique.join("\n"));
 
 
 }
@@ -133,7 +141,7 @@ adbExecute::~adbExecute()
 {
     execresult_plaintextedit->deleteLater();
     execute_lineedit->deleteLater();
-    if(procexec->processId()>0)
+    if (procexec->processId() > 0)
         {
             procexec->close();
             procexec->deleteLater();
@@ -150,9 +158,9 @@ void adbExecute::on_executeCommand_pushbutton_clicked()
     cursor.movePosition(QTextCursor::End);
     execresult_plaintextedit->setTextCursor(cursor);
 
-    if(executeUseLoop_checkbox->isChecked() && execute_lineedit->text()!="")
+    if (executeUseLoop_checkbox->isChecked() && execute_lineedit->text() != "")
         {
-            if(!executeUseLoopTimer.isActive())
+            if (!executeUseLoopTimer.isActive())
                 {
                     executeUseLoopTimer.setSingleShot(true);
                     executeUseLoopTimer.start(executeUseLoopDelay_spinbox->value() * 1000);
@@ -161,58 +169,58 @@ void adbExecute::on_executeCommand_pushbutton_clicked()
                 }
         }
 
-    if(!procexec->isOpen())
+    if (!procexec->isOpen())
         {
             procexec->start(adbBinary + " -s " + androidDevice + " shell");
-            if(!procexec->isOpen() && procexecGetSU_checkbox->isChecked())
+            if (!procexec->isOpen() && procexecGetSU_checkbox->isChecked())
                 {
                     getSU();
                 }
             //interesting that I'm getting crash here only under linux under windows works fine...
             //if in some reson process doesn't exists anymore, for example device disconnected
-            if(!procexec->isOpen())
-            {
-                procexec->write(QString(execute_lineedit->text()+"\n").toStdString().c_str());
-            }
+            if (!procexec->isOpen())
+                {
+                    procexec->write(QString(execute_lineedit->text() + "\n").toStdString().c_str());
+                }
             else
-            {
-                cout<<"Something weird no such device:"<<androidDevice<<", maybe it was disconnected."<<endl;
-            }
+                {
+                    cout << "Something weird no such device:" << androidDevice << ", maybe it was disconnected." << endl;
+                }
 
 
         }
     else
         {
-            procexec->write((execute_lineedit->text()+"\n").toStdString().c_str());
+            procexec->write((execute_lineedit->text() + "\n").toStdString().c_str());
         }
-    if(execute_lineedit->text()=="clear")
+    if (execute_lineedit->text() == "clear")
         {
             execresult_plaintextedit->clear();
         }
     //update completer and history with entered command
-    if(execute_lineedit->text()!="")
-    {
-    completer->model()->insertRow(0);
-    completer->model()->setData(completer->model()->index(0,0), execute_lineedit->text());
-    emit AppendStringToFileSignal("exec_history",execute_lineedit->text());
-    }
-    modelCursor=-1;
-    if(!executeUseLoop_checkbox->isChecked())
-    {
-    execute_lineedit->setText("");
-    execute_lineedit->clear();
-    }
+    if (execute_lineedit->text() != "")
+        {
+            completer->model()->insertRow(0);
+            completer->model()->setData(completer->model()->index(0, 0), execute_lineedit->text());
+            emit AppendStringToFileSignal("exec_history", execute_lineedit->text());
+        }
+    modelCursor = -1;
+    if (!executeUseLoop_checkbox->isChecked())
+        {
+            execute_lineedit->setText("");
+            execute_lineedit->clear();
+        }
     execute_lineedit->setFocus();
 }
 
 void adbExecute::on_executeUseLoopTimer()
 {
     on_executeCommand_pushbutton_clicked();
-    if(!executeUseLoop_checkbox->isChecked())
-    {
-        execute_lineedit->setEnabled(true);
-        executeCommand_pushbutton->setEnabled(true);
-    }
+    if (!executeUseLoop_checkbox->isChecked())
+        {
+            execute_lineedit->setEnabled(true);
+            executeCommand_pushbutton->setEnabled(true);
+        }
 }
 
 /* on su checkbox checked try to start process as su
@@ -220,16 +228,16 @@ void adbExecute::on_executeUseLoopTimer()
 */
 void adbExecute::on_procexecGetSU_checkbox_clicked()
 {
-    if(procexecGetSU_checkbox->isChecked())
+    if (procexecGetSU_checkbox->isChecked())
         {
             getSU();
         }
     else
         {
-        if(procexec->isOpen())
-            {
-                procexec->close();
-            }
+            if (procexec->isOpen())
+                {
+                    procexec->close();
+                }
         }
 }
 /* Function to get su on rooted device
@@ -238,18 +246,18 @@ void adbExecute::on_procexecGetSU_checkbox_clicked()
  */
 void adbExecute::getSU()
 {
-    if(!procexec->isOpen())
+    if (!procexec->isOpen())
         {
             procexec->start(adbBinary + " -s " + androidDevice + " shell\n");
             execresult_plaintextedit->appendPlainText("####### Trying to get root privileges #######");
-            if(procexec->isOpen())
-            {
-            procexec->write(QString("su\n").toStdString().c_str());
-            if(execute_lineedit->text()!="")
+            if (procexec->isOpen())
                 {
-                    procexec->write(QString(execute_lineedit->text()+"\n").toStdString().c_str());
+                    procexec->write(QString("su\n").toStdString().c_str());
+                    if (execute_lineedit->text() != "")
+                        {
+                            procexec->write(QString(execute_lineedit->text() + "\n").toStdString().c_str());
+                        }
                 }
-            }
 //            else
 //            {
 //            }
@@ -259,7 +267,7 @@ void adbExecute::getSU()
         {
             execresult_plaintextedit->appendPlainText("####### Trying to get root privileges #######");
             procexec->write(QString("su\n").toStdString().c_str());
-            procexec->write(QString(execute_lineedit->text()+"\n").toStdString().c_str());
+            procexec->write(QString(execute_lineedit->text() + "\n").toStdString().c_str());
         }
 }
 
@@ -269,7 +277,7 @@ void adbExecute::getSU()
  */
 void adbExecute::on_resetConsole_toolbutton_clicked()
 {
-    if(procexec->isOpen())
+    if (procexec->isOpen())
         {
             procexec->close();
         }
@@ -279,11 +287,11 @@ void adbExecute::on_resetConsole_toolbutton_clicked()
  */
 void adbExecute::on_completer_activated(QString)
 {
-    if(!executeUseLoop_checkbox->isChecked() && execute_lineedit->text()!="")
-    {
-        execute_lineedit->clear();
-        execute_lineedit->setText("");
-    }
+    if (!executeUseLoop_checkbox->isChecked() && execute_lineedit->text() != "")
+        {
+            execute_lineedit->clear();
+            execute_lineedit->setText("");
+        }
     execute_lineedit->setFocus();
 }
 
@@ -291,9 +299,9 @@ void adbExecute::on_completer_activated(QString)
 void adbExecute::on_procexec_closed(int reason)
 {
     QTextStream cout(stdout);
-    cout<<reason<<endl;
+    cout << reason << endl;
     execresult_plaintextedit->appendPlainText("####### Adb closed " + QString::number(reason) + " ####### device: " + getandroidDevice());
-    if(procexec->isOpen())
+    if (procexec->isOpen())
         {
             procexec->close();
         }
@@ -315,9 +323,9 @@ void adbExecute::on_execresult_plaintextedit_keyPress(QKeyEvent *e)
 void adbExecute::cmdUpdateError()
 {
     QString appendText(procexec->readAll());
-    execresult_plaintextedit->appendPlainText(appendText.toUtf8().replace("\r","\n").replace("\n\n","\n"));
+    execresult_plaintextedit->appendPlainText(appendText.toUtf8().replace("\r", "\n").replace("\n\n", "\n"));
     QTextStream cout(stdout);
-    cout<<appendText<<endl;
+    cout << appendText << endl;
 }
 
 /* on standard stream after excute command
@@ -347,38 +355,39 @@ void adbExecute::cmdUpdateText()
 //                }
 //        }
 
-    QString appendText="";
-    while(procexec->canReadLine()){
-        QString line=procexec->readLine().trimmed();
-        if(!line.isNull() && line!="" && !line.isEmpty())
-           {
-                if(line.contains("@") && line.contains(":/") && (line.contains("$") || line.contains("#")))
+    QString appendText = "";
+    while (procexec->canReadLine())
+        {
+            QString line = procexec->readLine().trimmed();
+            if (!line.isNull() && line != "" && !line.isEmpty())
                 {
-                    appendText="\n"+appendText+line+"\n";
+                    if (line.contains("@") && line.contains(":/") && (line.contains("$") || line.contains("#")))
+                        {
+                            appendText = "\n" + appendText + line + "\n";
+                        }
+                    else
+                        {
+                            appendText = appendText + line + "\n";
+                        }
                 }
-                else
-                {
-                    appendText=appendText+line+"\n";
-                }
-           }
-      }
+        }
     execresult_plaintextedit->insertPlainText(appendText);
 
-    appendText=procexec->readAll();
-        QStringList wholeStringList;
-        //wholeStringList=QString(appendText.toUtf8().replace("\r\n","\n")).split(QRegExp("[\n]"),QString::SkipEmptyParts);
-        wholeStringList=QString(appendText.toUtf8().replace("\r","\n").replace("\n\n","\n")).split(QRegExp("[\n]"),QString::SkipEmptyParts);
-        qDebug()<<wholeStringList;
-        foreach (QString str, wholeStringList)
-            {
-            if(!str.isNull() && str!="" && !str.isEmpty())
-            {
-                if(str.contains(":/") && (str.contains("$") || str.contains("#")))
-                    {
-                        execresult_plaintextedit->appendPlainText("\n"+str);
-                    }
-            }
-            }
+    appendText = procexec->readAll();
+    QStringList wholeStringList;
+    //wholeStringList=QString(appendText.toUtf8().replace("\r\n","\n")).split(QRegExp("[\n]"),QString::SkipEmptyParts);
+    wholeStringList = QString(appendText.toUtf8().replace("\r", "\n").replace("\n\n", "\n")).split(QRegExp("[\n]"), QString::SkipEmptyParts);
+    qDebug() << wholeStringList;
+    foreach (QString str, wholeStringList)
+        {
+            if (!str.isNull() && str != "" && !str.isEmpty())
+                {
+                    if (str.contains(":/") && (str.contains("$") || str.contains("#")))
+                        {
+                            execresult_plaintextedit->appendPlainText("\n" + str);
+                        }
+                }
+        }
 
 
     QTextCursor cursor(execresult_plaintextedit->textCursor());
@@ -392,16 +401,16 @@ void adbExecute::cmdUpdateText()
  */
 QString adbExecute::ReadFullFile(QString strPath)
 {
-    QFile file(qApp->applicationDirPath() + "/" +strPath);
-    QString filetext =QString();
-    if(!file.exists())
+    QFile file(gethistoryDir() + "/" + strPath);
+    QString filetext = QString();
+    if (!file.exists())
         {
             return "";
         }
     else
         {
             file.open(QIODevice::ReadOnly);
-            filetext=file.readAll();
+            filetext = file.readAll();
             file.close();
 
         }
@@ -415,10 +424,10 @@ QString adbExecute::ReadFullFile(QString strPath)
  */
 void adbExecute::on_AppendStringToFile(QString strPath, QString appendString)
 {
-    QFile outFile(qApp->applicationDirPath() + "/" +strPath);
+    QFile outFile(gethistoryDir() + "/" + strPath);
     outFile.open(QIODevice::WriteOnly | QIODevice::Append);
     QTextStream textStream(&outFile);
-    textStream <<appendString<<endl;
+    textStream << appendString << endl;
     outFile.close();
 }
 
@@ -428,10 +437,10 @@ void adbExecute::on_AppendStringToFile(QString strPath, QString appendString)
  */
 void adbExecute::on_RewriteFullFileSignal(QString strPath, QString appendString)
 {
-    QFile outFile(qApp->applicationDirPath() + "/" +strPath);
+    QFile outFile(gethistoryDir() + "/" + strPath);
     outFile.open(QIODevice::WriteOnly);
     QTextStream textStream(&outFile);
-    textStream <<appendString<<endl;
+    textStream << appendString << endl;
     outFile.close();
 }
 
@@ -439,58 +448,58 @@ void adbExecute::on_RewriteFullFileSignal(QString strPath, QString appendString)
  * obj - some object for example here for linedit
  * event - some event for example keypreses
  */
-bool adbExecute::eventFilter(QObject* obj, QEvent *event)
+bool adbExecute::eventFilter(QObject *obj, QEvent *event)
 {
     if (obj == execute_lineedit)
-    {
-        if (event->type() == QEvent::KeyPress)
         {
-            QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
-            if (keyEvent->key() == Qt::Key_Up)
-            {
-                QTextStream cout(stdout);
-                cout << "lineEdit -> Qt::Key_Up "<<modelCursor<<endl;
-                 if(modelCursor>-1)
-                 {
-                    modelCursor--;
-                    execute_lineedit->setText(completer->model()->data(completer->model()->index(modelCursor,0)).toString());
-
-                 }
-                 return true;
-            }
-            else if(keyEvent->key() == Qt::Key_Down)
-            {
-                QTextStream cout(stdout);
-                cout << "lineEdit -> Qt::Key_Down "<<modelCursor<<endl;
-                if(modelCursor>=-1 && modelCursor<completer->model()->rowCount()-1)
+            if (event->type() == QEvent::KeyPress)
                 {
-                    modelCursor++;
-                    execute_lineedit->setText(completer->model()->data(completer->model()->index(modelCursor,0)).toString());
+                    QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+                    if (keyEvent->key() == Qt::Key_Up)
+                        {
+                            QTextStream cout(stdout);
+                            cout << "lineEdit -> Qt::Key_Up " << modelCursor << endl;
+                            if (modelCursor > -1)
+                                {
+                                    modelCursor--;
+                                    execute_lineedit->setText(completer->model()->data(completer->model()->index(modelCursor, 0)).toString());
 
-                }
-                return true;
-            }
-            else if(keyEvent->key() == Qt::Key_Tab)
-            {
-                QTextStream cout(stdout);
-                cout << "lineEdit -> Qt::Key_Tab "<<endl;
+                                }
+                            return true;
+                        }
+                    else if (keyEvent->key() == Qt::Key_Down)
+                        {
+                            QTextStream cout(stdout);
+                            cout << "lineEdit -> Qt::Key_Down " << modelCursor << endl;
+                            if (modelCursor >= -1 && modelCursor < completer->model()->rowCount() - 1)
+                                {
+                                    modelCursor++;
+                                    execute_lineedit->setText(completer->model()->data(completer->model()->index(modelCursor, 0)).toString());
+
+                                }
+                            return true;
+                        }
+                    else if (keyEvent->key() == Qt::Key_Tab)
+                        {
+                            QTextStream cout(stdout);
+                            cout << "lineEdit -> Qt::Key_Tab " << endl;
 //                if(modelCursor>=-1 && modelCursor<completer->model()->rowCount()-1)
 //                {
 //                    modelCursor++;
 //                    execute_lineedit->setText(completer->model()->data(completer->model()->index(modelCursor,0)).toString());
 
 //                }
-                return true;
-            }
+                            return true;
+                        }
+                }
+            return false;
         }
-        return false;
-    }
     return adbExecute::eventFilter(obj, event);
 }
 
 void adbExecute::on_androidDeviceChanged(QString strAndroidDevice)
 {
-    if(procexec->isOpen())
+    if (procexec->isOpen())
         {
             procexec->close();
         }
