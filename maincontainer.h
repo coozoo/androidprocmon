@@ -9,6 +9,9 @@
 #include <QWidget>
 #include <QObject>
 #include <QTextStream>
+#include <QDir>
+#include <QFileInfo>
+#include <QFile>
 #include "adbviewer.h"
 #include "qcustomplot.h"
 #include "chartmanager.h"

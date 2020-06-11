@@ -1,29 +1,30 @@
-<!DOCTYPE RCC><RCC version="1.0">
-<qresource prefix="/">
-   <file>images/refresh.png</file>
-   <file>images/remove.png</file>
-   <file>images/alert.png</file>
-   <file>images/configuration.png</file>
-   <file>images/error.png</file>
-   <file>images/tick.png</file>
-   <file>images/right.png</file>
-   <file>images/right_green.png</file>
-   <file>images/execute.png</file>
-   <file>images/left.png</file>
-   <file>images/info.png</file>
-   <file>images/notepad.png</file>
-   <file>images/tree.png</file>
-   <file>images/red_disconnected.png</file>
-   <file>images/green_connected.png</file>
-   <file>images/orange_connecting.png</file>
-   <file>images/statistic.png</file>
-   <file>images/copy-small.png</file>
-   <file>images/compare.png</file>
-   <file>images/copy_pencil.png</file>
-   <file>images/echo.png</file>
-   <file>images/cleaning.png</file>
-   <file>images/disc-floopy.png</file>
-   <file>images/computer.png</file> 
-   <file>images/appicon256.png</file>
-</qresource>
+<RCC>
+    <qresource prefix="/">
+        <file>images/refresh.png</file>
+        <file>images/remove.png</file>
+        <file>images/alert.png</file>
+        <file>images/configuration.png</file>
+        <file>images/error.png</file>
+        <file>images/tick.png</file>
+        <file>images/right.png</file>
+        <file>images/right_green.png</file>
+        <file>images/execute.png</file>
+        <file>images/left.png</file>
+        <file>images/info.png</file>
+        <file>images/notepad.png</file>
+        <file>images/tree.png</file>
+        <file>images/red_disconnected.png</file>
+        <file>images/green_connected.png</file>
+        <file>images/orange_connecting.png</file>
+        <file>images/statistic.png</file>
+        <file>images/copy-small.png</file>
+        <file>images/compare.png</file>
+        <file>images/copy_pencil.png</file>
+        <file>images/echo.png</file>
+        <file>images/cleaning.png</file>
+        <file>images/disc-floopy.png</file>
+        <file>images/computer.png</file>
+        <file>images/appicon256.png</file>
+        <file>chart_rules.json</file>
+    </qresource>
 </RCC>
