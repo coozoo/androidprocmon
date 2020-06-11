@@ -1,10 +1,11 @@
 #!/bin/bash
 
-QT_DIR=/Users/admin/Qt5.7.0/5.7/clang_32
+QT_DIR=/usr/local/Cellar/qt/
+QT_DIR="$QT_DIR""$(ls $QT_DIR)"
 QMAKE=$QT_DIR/bin/qmake
 MAC_DEPLOY_TOOL=$QT_DIR/bin/macdeployqt
 
-BIN_DIR=./build-androidprocmon-clang32-Release/
+BIN_DIR=./build-androidprocmon-Release/
 APP_NAME=androidprocmon
 BUNDLE_NAME=$APP_NAME.app
 VOL_NAME="androidprocman"
@@ -15,7 +16,7 @@ VOL_NAME="androidprocman"
 PROJECT_FILE=androidprocmon.pro
 
 main(){
-    cd ~/proj/androidprocmon/
+    cd "${0/*}";
     compileProject
 
     RESULT=$?
@@ -31,12 +32,19 @@ main(){
         return $RESULT
     fi
     
-#    makeDMG
-#    RESULT=$?
-#    if [ $RESULT -ne 0 ] ; then
-#        echo Failed to Make DMG file
-#        return $RESULT
-#    fi
+    makeDMG
+    RESULT=$?
+    if [ $RESULT -ne 0 ] ; then
+        echo Failed to Make DMG file
+        return $RESULT
+    fi
+
+    makeZIP
+    RESULT=$?
+    if [ $RESULT -ne 0 ] ; then
+        echo Failed to Make ZIP file
+        return $RESULT
+    fi
 
     return 0
 }
@@ -109,27 +117,39 @@ prepareBundle(){
 }
 
 makeDMG(){
-    CURRENT_DIR=$PWD
     echo Making DMG File...
 
-    cd $BIN_DIR
-    if [ ! -d $BUNDLE_NAME ]
+    if [ ! -d "$BUNDLE_NAME" ]
     then
         echo "$BUNDLE_NAME bundle doesn't exist."
         return 1
     fi
     
-    rm -rf $DMG_DIR
-    mkdir $DMG_DIR
-    cp -r $BUNDLE_NAME $DMG_DIR
+    rm -f "$APP_NAME".dmg
+
+    hdiutil create -format UDZO -srcfolder "$BUNDLE_NAME" "$APP_NAME".dmg
     
-    hdiutil create -srcfolder $DMG_DIR -format UDBZ $DMG_PATH
+    echo Done.
+    return 0
+}
 
-    cd $CURRENT_DIR
+makeZIP(){
+    echo Making ZIP File...
 
+    if [ ! -d "$BUNDLE_NAME" ]
+    then
+        echo "$BUNDLE_NAME bundle doesn't exist."
+        return 1
+    fi
+    
+    rm -f "$APP_NAME".zip
+
+    zip -r -X "$APP_NAME".zip "$BUNDLE_NAME"
+    
     echo Done.
     return 0
 }
 
 main
 exit $?
+
