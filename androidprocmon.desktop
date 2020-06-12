@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Categories=Development;
+Name=Android Process Monitor
+Exec=androidprocmon %F
+Icon=computer.png
+Comment=Android Process Monitor

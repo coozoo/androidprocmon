@@ -1,0 +1,95 @@
+language: cpp
+jobs:
+  include:
+  - os: linux
+    compiler: gcc
+    sudo: require
+    dist: xenial
+  - os: osx
+    osx_image: xcode7.2
+    compiler: gcc
+  - os: windows
+
+before_install:
+  - |-
+      case $TRAVIS_OS_NAME in
+        linux)
+          sudo add-apt-repository ppa:beineri/opt-qt-5.11.1-xenial -y
+          sudo apt-get update -qq
+          ;;
+        windows)
+          [[ ! -f C:/tools/msys64/msys2_shell.cmd ]] && rm -rf C:/tools/msys64
+          choco uninstall -y mingw
+          choco upgrade --no-progress -y msys2
+          export msys2='cmd //C RefreshEnv.cmd '
+          export msys2+='& set MSYS=winsymlinks:nativestrict '
+          export msys2+='& C:\\tools\\msys64\\msys2_shell.cmd -defterm -no-start'
+          export mingw64="$msys2 -mingw64 -full-path -here -c "\"\$@"\" --"
+          export msys2+=" -msys2 -c "\"\$@"\" --"
+          $msys2 pacman --sync --noconfirm --needed mingw-w64-x86_64-toolchain
+          ## Install more MSYS2 packages from https://packages.msys2.org/base here
+          taskkill //IM gpg-agent.exe //F  # https://travis-ci.community/t/4967
+          export PATH=/C/tools/msys64/mingw64/bin:$PATH
+          export MAKE=mingw32-make  # so that Autotools can find it
+        ;;
+      esac
+
+install:
+  - |-
+      case $TRAVIS_OS_NAME in
+        linux)
+          sudo apt-get -y install qt511base libgl1-mesa-dev
+          source /opt/qt*/bin/qt*-env.sh
+          ;;
+        osx)
+          brew install qt5
+          ;;
+        windows)
+          $msys2 pacman --sync --clean --noconfirm
+          $msys2 pacman -S --noconfirm base-devel git mercurial cvs wget p7zip
+          $msys2 pacman -S --noconfirm perl ruby python2 mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain
+          $msys2 pacman -S --noconfirm mingw-w64-x86_64-qt5
+          $msys2 pacman -S --noconfirm mingw-w64-x86_64-zlib zlib-devel
+          #$msys2 pacman -S --noconfirm mingw-w64-x86_64-openssl openssl-devel
+          ;;
+      esac
+
+script:
+  - |-
+      case $TRAVIS_OS_NAME in
+        linux)
+          qmake CONFIG+=release PREFIX=/usr
+          make -j$(nproc)
+          mkdir -p appdir/usr/bin
+          cp androidprocmon appdir/usr/bin/androidprocmon
+          mkdir -p appdir/usr/share/icons/
+          cp images/computer.png appdir/usr/share/icons/
+          mkdir -p appdir/usr/share/applications/
+          cp androidprocmon.desktop appdir/usr/share/applications/
+          wget -c -nv "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage"
+          chmod a+x linuxdeployqt-continuous-x86_64.AppImage
+          ./linuxdeployqt-continuous-x86_64.AppImage appdir/usr/share/applications/*.desktop -appimage
+          ;;
+        osx)
+          chmod 777 MAC_build_RELEASE.sh
+          ./MAC_build_RELEASE.sh
+          ;;
+        windows)
+          $mingw64 qmake
+          $mingw64 make
+          $mingw64 rm -f release/*.o; rm -f release/*.cpp; rm -f release/*.h;
+          $mingw64 windeployqt.exe release/androidprocmon.exe
+          $mingw64 cp /c/tools/msys64/mingw64/bin/zlib*.dll release/; cp /c/tools/msys64/mingw64/bin/libgcc*.dll release/; cp /c/tools/msys64/mingw64/bin/libwinpthread*.dll release/; cp /c/tools/msys64/mingw64/bin/libstdc*.dll release/; cp /c/tools/msys64/mingw64/bin/libdouble*.dll release/; cp /c/tools/msys64/mingw64/bin/libicuin6*.dll release/; cp /c/tools/msys64/mingw64/bin/libicuuc6*.dll release/; cp /c/tools/msys64/mingw64/bin/libicudt6*.dll release/; cp /c/tools/msys64/mingw64/bin/libpcre*.dll release/; cp /c/tools/msys64/mingw64/bin/libzstd*.dll release/; cp /c/tools/msys64/mingw64/bin/libharfbuzz*.dll release/; cp /c/tools/msys64/mingw64/bin/libgraphite*.dll release/; cp /c/tools/msys64/mingw64/bin/libfreetype*.dll release/; cp /c/tools/msys64/mingw64/bin/libbrotlidec*.dll release/; cp /c/tools/msys64/mingw64/bin/libbrotlicommon*.dll release/; cp /c/tools/msys64/mingw64/bin/libbz*.dll release/; cp /c/tools/msys64/mingw64/bin/libpng*.dll release/; cp /c/tools/msys64/mingw64/bin/libglib*.dll release/; cp /c/tools/msys64/mingw64/bin/libintl*.dll release/; cp /c/tools/msys64/mingw64/bin/libiconv*.dll release/; cp /c/tools/msys64/mingw64/bin/libpcre*.dll release/;
+          $mingw64 mv release androidprocmon_"$(cat main.cpp |grep 'const QString APP'|awk -F\" '{print $2;}')"_WIN64; 7z -tzip a androidprocmon_"$(cat main.cpp |grep 'const QString APP'|awk -F\" '{print $2;}')"_WIN64.zip ./androidprocmon_"$(cat main.cpp |grep 'const QString APP'|awk -F\" '{print $2;}')"_WIN64/
+      esac
+
+after_success:
+  - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then bash upload.sh androidproc*.AppImage* ; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then bash upload.sh androidproc*.zip androidproc*.dmg ; fi
+  - if [ "$TRAVIS_OS_NAME" = "windows" ]; then bash upload.sh androidproc*.zip     ; fi
+
+branches:
+  except:
+    - # Do not build tags that we create when we upload to GitHub Releases
+    - /^(?i:continuous)/
