@@ -6,6 +6,7 @@
 
 #include <QMainWindow>
 #include <QToolButton>
+#include <settingswindow.h>
 #include "adbviewer.h"
 #include "qcustomplot.h"
 #include "chartmanager.h"
@@ -21,15 +22,19 @@ class MainWindow : public QMainWindow
     mainContainer *form;
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    QToolButton *settings_toolbutton;
     QToolButton *about_toolbutton;
+
 
 private:
     Ui::MainWindow *ui;
 
+
 public slots:
     void aboutWindow();
+    void settingsWindow();
 };
 
 #endif // MAINWINDOW_H

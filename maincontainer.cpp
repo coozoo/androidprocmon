@@ -271,3 +271,10 @@ int mainContainer::on_savechartimages_toolbutton_clicked()
     return 0;
 
 }
+
+void mainContainer::on_setting_changed()
+{
+    QTextStream cout(stdout);
+    cout<<"maincontainersettings"<<endl;
+    adbViewer_cont->setadbBinary(adbViewer_cont->whereAdbExists());
+}

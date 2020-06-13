@@ -44,6 +44,7 @@
 #include <QCompleter>
 #include <QStringListModel>
 #include <QSpacerItem>
+#include <QSettings>
 #include "qplaintexteditcursor.h"
 #include "adbexecute.h"
 
@@ -182,6 +183,7 @@ public:
     void setadbBinary(QString m_adbBinary)
     {
         adbBinary = m_adbBinary;
+        emit adbPath_changed();
     }
     QString getadbBinary() const
     { return adbBinary; }
@@ -212,6 +214,7 @@ signals:
     void dumpsysProcStarted();
     void RewriteFullFileSignal(QString strPath, QString appendString);
     void androidDeviceChanged(QString strAndroidDevice);
+    void adbPath_changed();
 
 public slots:
 
@@ -257,6 +260,8 @@ private slots:
     void on_dumpsysProcStarted();
 
     void on_RewriteFullFileSignal(QString strPath, QString appendString);
+
+    void on_adbPath_changed();
 
 };
 
