@@ -24,7 +24,8 @@ SOURCES += main.cpp\
     chartmanager.cpp \
     chartrealtime.cpp \
     maincontainer.cpp \
-    adbexecute.cpp
+    adbexecute.cpp \
+    settingswindow.cpp
 
 HEADERS  += mainwindow.h \
     adbviewer.h \
@@ -34,9 +35,11 @@ HEADERS  += mainwindow.h \
     chartrealtime.h \
     maincontainer.h \
     maincontainerform.h \
-    adbexecute.h
+    adbexecute.h \
+    settingswindow.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    settingswindow.ui
 
 
 win32:RC_FILE = myapp.rc

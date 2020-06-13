@@ -24,7 +24,7 @@ class mainContainer : public QWidget
 {
         Q_OBJECT
 public:
-    mainContainer(QWidget *parent = 0);
+    mainContainer(QWidget *parent = nullptr);
     ~mainContainer();
     QString datetimefile;
     adbViewer *adbViewer_cont;
@@ -48,6 +48,7 @@ public slots:
     void on_showhidebuttons_clicked();
     void on_range_spinbox_valueChanged(int range);
     int on_savechartimages_toolbutton_clicked();
+    void on_setting_changed();
 
 private:
     Ui::mainContainerForm *ui;

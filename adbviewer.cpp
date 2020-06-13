@@ -5,6 +5,7 @@
 
 adbViewer::adbViewer(QWidget *parent) : QWidget(parent)
 {
+
     QTextStream cout(stdout);
     //some stuf to handle out different stupid thisng :)
     totalCPUcolumnCounter=0;
@@ -345,6 +346,8 @@ adbViewer::adbViewer(QWidget *parent) : QWidget(parent)
 
     //emitted siganl to override file
     connect(this,SIGNAL(RewriteFullFileSignal(QString,QString)),this,SLOT(on_RewriteFullFileSignal(QString,QString)));
+
+    connect(this,&adbViewer::adbPath_changed,this,&adbViewer::on_adbPath_changed);
 
 }
 
@@ -1918,6 +1921,13 @@ QString adbViewer::whereAdbExists()
     QString returnpath="";
     QTextStream cout(stdout);
     cout<<"Choosing ADB path"<<endl;
+    QSettings s;
+    if(s.contains("adbPath"))
+    {
+        returnpath=s.value("adbPath").toString();
+        cout<<"adb overided by settings: "<<returnpath<<endl;
+        return returnpath;
+    }
     QStringList adbPath=QStringList();
 #ifdef Q_OS_MAC
     adbPath.append(qApp->applicationDirPath() +"/androidprocmon.app/Contents/MacOS/adb");
@@ -1964,3 +1974,10 @@ QString adbViewer::whereAdbExists()
     cout<<"adb found: "<<returnpath<<endl;
     return returnpath;
 }
+
+void adbViewer::on_adbPath_changed()
+{
+    on_refreshDevices_toolbutton_clicked();
+    execute_dock->setadbBinary(getadbBinary());
+}
+

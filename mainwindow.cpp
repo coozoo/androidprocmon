@@ -9,6 +9,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    settings_toolbutton=new QToolButton();
+    settings_toolbutton->setIcon(QIcon(QPixmap(":/images/configuration.png")));
+    settings_toolbutton->setToolTip(tr("Settings"));
+    ui->mainToolBar->addWidget(settings_toolbutton);
     about_toolbutton=new QToolButton();
     about_toolbutton->setIcon(QIcon(QPixmap(":/images/info.png")));
     about_toolbutton->setToolTip(tr("Show about info"));
@@ -17,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //create form with all elements and place it into groupbox
     form= new mainContainer(ui->groupBox);
     ui->gridLayout_4->addWidget(form);
+    connect(settings_toolbutton,&QToolButton::clicked,this,&MainWindow::settingsWindow);
 
 }
 
@@ -63,4 +69,15 @@ void MainWindow::aboutWindow()
     msgbox.move(ui->centralWidget->mapToGlobal(QPoint(widgetRect.center().x()-msgbox.geometry().height()/2,widgetRect.center().y()-msgbox.geometry().width()/2)));
 
 
+}
+
+
+void MainWindow::settingsWindow()
+{
+    SettingsWindow settings_window;
+    connect(&settings_window,&SettingsWindow::settings_changed,form,&mainContainer::on_setting_changed);
+    settings_window.setWindowTitle("Settings");
+    settings_window.setWindowIcon(QIcon(":/images/configuration.png"));
+    settings_window.exec();
+    disconnect(&settings_window);
 }

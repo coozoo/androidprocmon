@@ -4,6 +4,7 @@
 #include "mainwindow.h"
 #include <QApplication>
 #include <QTranslator>
+#include <QSettings>
 
 const QString APP_VERSION = "0.5b";
 
@@ -53,9 +54,20 @@ int main(int argc, char *argv[])
 #endif
 
     cout << a.property("appname").toString() << " " << a.property("appversion").toString() << endl;
+    QString settingsDir="";
+#ifdef Q_OS_WIN
+    settingsDir=qApp->applicationDirPath();
+#endif
+#if defined(Q_OS_LINUX) || defined(Q_OS_MAC)
+    settingsDir=QStandardPaths::standardLocations(QStandardPaths::ConfigLocation)[0] + "/" + qAppName();
+#endif
+    QSettings::setDefaultFormat(QSettings::IniFormat);
+    QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,settingsDir);
+    QApplication::setOrganizationName("ini");
+    QApplication::setApplicationName("androidprocmon");
     MainWindow w;
     w.setWindowTitle(a.property("appname").toString() + " " + a.property("appversion").toString());
-    w.show();
+    w.showMaximized();
 
     return a.exec();
 }
