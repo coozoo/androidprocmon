@@ -3,5 +3,5 @@ Type=Application
 Categories=Development;
 Name=Android Process Monitor
 Exec=androidprocmon %F
-Icon=computer.png
+Icon=computer
 Comment=Android Process Monitor
