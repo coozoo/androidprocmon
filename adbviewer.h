@@ -66,7 +66,7 @@ class adbViewer : public QWidget
            WRITE setandroidDevice
         )
 public:
-    explicit adbViewer(QWidget *parent = 0);
+    explicit adbViewer(QWidget *parent = nullptr);
     ~adbViewer();
 
 
@@ -204,7 +204,7 @@ private:
     QString strDateTimeFile;
     QString androidDevice;
     QString adbBinary="adb";
-
+    const QString filter_list_id="filter_list_id";
 
 signals:
     void regexpMessageReceived(QString payLoad);

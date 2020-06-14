@@ -5,7 +5,7 @@
 
 adbViewer::adbViewer(QWidget *parent) : QWidget(parent)
 {
-
+    QSettings s;
     QTextStream cout(stdout);
     //some stuf to handle out different stupid thisng :)
     totalCPUcolumnCounter=0;
@@ -54,6 +54,12 @@ adbViewer::adbViewer(QWidget *parent) : QWidget(parent)
         {
             filterCondition_combobox->addItem(string.split(",")[0],QVariant(string.split(",")[1]));
         }
+    }
+    bool filter_index_ok;
+    int filter_index_id=s.value(filter_list_id).toInt(&filter_index_ok);
+    if(filter_index_ok)
+    {
+        filterCondition_combobox->setCurrentIndex(filter_index_id);
     }
     //button to save current filter
     rememberFilter_toolbutton=new QToolButton();
@@ -1878,7 +1884,8 @@ void adbViewer::updateFilters()
 */
 void adbViewer::on_filterCondition_combobox_currentIndexChanged(int index)
 {
-    Q_UNUSED(index);
+    QSettings s;
+    s.setValue(filter_list_id,index);
     useRegexp_checkbox->setChecked(filterCondition_combobox->currentData().toBool());
 }
 
