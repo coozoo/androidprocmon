@@ -15,8 +15,8 @@ Source0: https://github.com/coozoo/androidprocmon/archive/master.zip#/%{name}-%{
 
 License: MIT
 
-BuildRequires: qt5-qtbase-devel >= 5.5
-BuildRequires: qt5-linguist >= 5.5
+BuildRequires: qt5-qtbase-devel >= 5.9
+BuildRequires: qt5-linguist >= 5.9
 
 # Requires: qt5 >= 5.5
 
