@@ -109,10 +109,27 @@ prepareBundle(){
         echo macdeployqt failed, error code $RESULT
         return $RESULT
     fi
-
     cd $CURRENT_DIR
+    
+    curl -L https://dl.google.com/android/repository/platform-tools-latest-darwin.zip --output platform-tools-latest-darwin.zip
+    if [ $? -ne 0 ]; then
+	echo "unable to download adb"
+    else
+	unzip platform-tools-latest-darwin.zip
+	if [ $? -ne 0 ]; then
+	    echo "unable unpack adb"
+	else
+	    cp platform-tools/adb $BUNDLE_NAME/Contents/MacOS/
+	    if [ $? -eq 0 ]; then
+		echo "adb included"
+	    else
+		echo "package packed without adb"
+	    fi
+	fi
+    fi
+    
     echo Done.
- 
+     
     return 0
 }
 
