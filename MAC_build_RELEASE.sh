@@ -8,7 +8,7 @@ MAC_DEPLOY_TOOL=$QT_DIR/bin/macdeployqt
 BIN_DIR=./build-androidprocmon-Release/
 APP_NAME=androidprocmon
 BUNDLE_NAME=$APP_NAME.app
-VOL_NAME="androidprocman"
+VOL_NAME="androidprocmon"
 
 #DMG_DIR=${APP_NAME}_dmg
 #DMG_PATH=./$APP_NAME.dmg
@@ -32,6 +32,7 @@ main(){
         return $RESULT
     fi
     
+    app_ver=$(cat main.cpp |grep 'const QString APP'|awk -F\" '{print $2;}')
     makeDMG
     RESULT=$?
     if [ $RESULT -ne 0 ] ; then
@@ -90,11 +91,11 @@ prepareBundle(){
     # copy appconfig to resources  
     mkdir ./lang
     cp ../../../*.qm ./lang/
-    cp ../../../chart_rules.json .
-    cp ../../../exec_history .
-    cp ../../../filters_list .
+    #cp ../../../chart_rules.json .
+    #cp ../../../exec_history .
+    #cp ../../../filters_list .
     #path to adb in my case installed by: $ brew install android-platform-tools
-    cp /usr/local/Cellar/android-platform-tools/25.0.3/bin/adb .
+    #cp /usr/local/Cellar/android-platform-tools/25.0.3/bin/adb .
     #cd ..
     #cd Contents
     #cd Resources
@@ -142,9 +143,9 @@ makeDMG(){
         return 1
     fi
     
-    rm -f "$APP_NAME".dmg
+    rm -f "$APP_NAME"_"$app_ver".dmg
 
-    hdiutil create -format UDZO -srcfolder "$BUNDLE_NAME" "$APP_NAME".dmg
+    hdiutil create -format UDZO -srcfolder "$BUNDLE_NAME" "$APP_NAME"_"$app_ver".dmg
     
     echo Done.
     return 0
@@ -159,9 +160,9 @@ makeZIP(){
         return 1
     fi
     
-    rm -f "$APP_NAME".zip
+    rm -f "$APP_NAME"_"$app_ver".zip
 
-    zip -r -X "$APP_NAME".zip "$BUNDLE_NAME"
+    zip -r -X "$APP_NAME"_"$app_ver".zip "$BUNDLE_NAME"
     
     echo Done.
     return 0
