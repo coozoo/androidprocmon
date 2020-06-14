@@ -69,7 +69,6 @@ script:
           wget -c -nv "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage"
           chmod a+x linuxdeployqt-continuous-x86_64.AppImage
           ./linuxdeployqt-continuous-x86_64.AppImage appdir/usr/share/applications/*.desktop -appimage
-          ls -l
           ;;
         osx)
           chmod 777 MAC_build_RELEASE.sh
@@ -87,7 +86,7 @@ script:
 
 after_success:
   - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then bash upload.sh androidproc*.AppImage* ; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then bash upload.sh Android*.AppImage* ; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then bash upload.sh androidproc*.zip androidproc*.dmg ; fi
   - if [ "$TRAVIS_OS_NAME" = "windows" ]; then bash upload.sh androidproc*.zip     ; fi
 
