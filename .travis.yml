@@ -69,6 +69,7 @@ script:
           wget -c -nv "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage"
           chmod a+x linuxdeployqt-continuous-x86_64.AppImage
           ./linuxdeployqt-continuous-x86_64.AppImage appdir/usr/share/applications/*.desktop -appimage
+          mv Android*.AppImage Android_Process_Monitor-x86_64.AppImage
           ;;
         osx)
           chmod 777 MAC_build_RELEASE.sh
