@@ -47,6 +47,13 @@ adbViewer::adbViewer(QWidget *parent) : QWidget(parent)
     filterCondition_combobox->setEditable(true);
     filterCondition_combobox->setInsertPolicy(QComboBox::NoInsert);
     //fill out combobox with filters from file
+    QFile file(filters_list_filepath + "/filters_list");
+    QDir().mkpath(filters_list_filepath) ;
+    if (!QFileInfo::exists(filters_list_filepath + "/filters_list"))
+        {
+            QFile::copy(":/filters_list", filters_list_filepath + "/filters_list");
+            QFile(filters_list_filepath + "/filters_list").setPermissions(QFile::WriteUser | QFile::WriteOwner | QFile::WriteGroup | QFile::ReadUser | QFile::ReadOwner | QFile::ReadGroup);
+        }
     QString filtersList=ReadFullFile("filters_list");
     foreach(QString string,filtersList.split("\n"))
     {
@@ -1781,7 +1788,7 @@ void adbViewer::on_dumpsysProcTimer()
  */
 QString adbViewer::ReadFullFile(QString strPath)
 {
-    QFile file(qApp->applicationDirPath() + "/" +strPath);
+    QFile file(filters_list_filepath + "/" +strPath);
     QString filetext =QString();
     if(!file.exists())
         {
@@ -1805,7 +1812,7 @@ QString adbViewer::ReadFullFile(QString strPath)
  */
 void adbViewer::on_RewriteFullFileSignal(QString strPath, QString appendString)
 {
-    QFile outFile(qApp->applicationDirPath() + "/" +strPath);
+    QFile outFile(filters_list_filepath + "/" +strPath);
     outFile.open(QIODevice::WriteOnly);
     QTextStream textStream(&outFile);
     textStream <<appendString<<endl;

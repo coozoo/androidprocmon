@@ -1,2 +1,4 @@
-(.+GCM-MESSAGE-PAYLOD.+}]),true
+FirebaseRemoteConfig,false
+(.+libEGL.+\)),true
+(\d+\s\w+\slibEGL.+\)),true
 

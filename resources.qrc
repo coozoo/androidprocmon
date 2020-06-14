@@ -26,5 +26,6 @@
         <file>images/computer.png</file>
         <file>images/appicon256.png</file>
         <file>chart_rules.json</file>
+        <file>filters_list</file>
     </qresource>
 </RCC>

@@ -198,6 +198,13 @@ public:
 
     QString whereAdbExists();
 
+#ifdef Q_OS_WIN
+    QString filters_list_filepath=qApp->applicationDirPath();
+#endif
+#if defined(Q_OS_LINUX) || defined(Q_OS_MAC)
+    QString filters_list_filepath=QStandardPaths::standardLocations(QStandardPaths::ConfigLocation)[0] + "/" + qAppName();
+#endif
+
 
 private:
     QTimer dumpsysProcTimer;
