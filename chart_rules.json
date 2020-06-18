@@ -1,9 +1,9 @@
 {
 "toprules":{"charts":[
-{"chart":"CPU","description":"Total CPU load vs Process","legend":"CPU load","vaxislabel":"percents %","graphs":[{"name":"[CPU User+System]","rule":"CPU(User)\\+CPU(System)"},{"name":"[CPU User]","rule":"CPU(User)"},{"name":"CPU process","rule":"CPU%"}]},
-{"chart":"CPU Process","description":"","legend":"Process CPU load","vaxislabel":"percents %","graphs":[{"name":"CPU process","rule":"CPU%"}]},
+{"chart":"CPU","description":"Total CPU load vs Process","legend":"CPU load","vaxislabel":"percents %","graphs":[{"name":"[CPU User+System]","rule":"CPU(User)\\|CPU(usr)\\|CPU(user)\\+CPU(System)\\|CPU(sys)"},{"name":"[CPU User]","rule":"CPU(User)\\|CPU(usr)\\|CPU(user)"},{"name":"CPU process","rule":"CPU%\\|%CPU"}]},
+{"chart":"CPU Process","description":"","legend":"Process CPU load","vaxislabel":"percents %","graphs":[{"name":"CPU process","rule":"CPU%\\|%CPU"}]},
 {"chart":"Threads","description":"","legend":"Amount of threads","vaxislabel":"number","graphs":[{"name":"Threads","rule":"#THR"}]},
-{"chart":"RSS","description":"","legend":"Memory kB","vaxislabel":"Memory kB","graphs":[{"name":"RSS","rule":"RSS"}]}
+{"chart":"RSS","description":"","legend":"Memory kB","vaxislabel":"Memory kB","graphs":[{"name":"RSS","rule":"RSS\\|RES"}]}
 ]},
 "dumpsysrules":{"charts":[
 {"chart":"Pss_Total","description":"","legend":"TOTAL|Pss_Total","vaxislabel":"kB","graphs":[{"name":"Pss_Total","rule":"TOTAL|Pss_Total"}]},

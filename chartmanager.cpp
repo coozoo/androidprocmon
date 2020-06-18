@@ -245,6 +245,18 @@ int chartManager::getValueByHeader(QString header, QString headersString, QStrin
 {
     QStringList headersStringList=headersString.split(",");
     QStringList dataStringList=dataString.split(",");
+    if(header.contains("\\|"))
+    {
+        foreach (QString str, header.split("\\|"))
+        {
+            if(headersStringList.contains(str))
+            {
+                header=str;
+                break;
+            }
+        }
+
+    }
     QTextStream cout(stdout);
     cout<<"IIIIIIIIIIIIIIIIIIIIIII"<<endl;
     cout<<header<<endl;
