@@ -65,6 +65,18 @@ class adbViewer : public QWidget
            READ getandroidDevice
            WRITE setandroidDevice
         )
+    Q_PROPERTY(QString androidSDK
+           READ getandroidSDK
+           WRITE setandroidSDK
+        )
+    Q_PROPERTY(QString androidVersion
+           READ getandroidVersion
+           WRITE setandroidVersion
+        )
+    Q_PROPERTY(QString topVersion
+           READ gettopVersion
+           WRITE settopVersion
+        )
 public:
     explicit adbViewer(QWidget *parent = nullptr);
     ~adbViewer();
@@ -196,6 +208,30 @@ public:
     QString getandroidDevice() const
     { return androidDevice; }
 
+    void setandroidSDK(QString m_androidSDK)
+    {
+        androidSDK = m_androidSDK;
+        emit androidSDKChanged(androidSDK);
+    }
+    QString getandroidSDK() const
+    { return androidSDK; }
+
+    void setandroidVersion(QString m_androidVersion)
+    {
+        androidVersion = m_androidVersion;
+        emit androidVersionChanged(androidVersion);
+    }
+    QString getandroidVersion() const
+    { return androidDevice; }
+
+    void settopVersion(QString m_topVersion)
+    {
+        topVersion = m_topVersion;
+        emit topVersionChanged(topVersion);
+    }
+    QString gettopVersion() const
+    { return topVersion; }
+
     QString whereAdbExists();
 
 #ifdef Q_OS_WIN
@@ -211,6 +247,12 @@ private:
     QString strDateTimeFile;
     QString androidDevice;
     QString adbBinary="adb";
+    QString androidSDK="";
+    QString androidVersion="";
+    QString topVersion="";
+    QString topCommand="";
+    QString cpuArch="";
+
     const QString filter_list_id="filter_list_id";
 
 signals:
@@ -221,6 +263,9 @@ signals:
     void dumpsysProcStarted();
     void RewriteFullFileSignal(QString strPath, QString appendString);
     void androidDeviceChanged(QString strAndroidDevice);
+    void androidSDKChanged(QString androidSDK);
+    void androidVersionChanged(QString androidVersion);
+    void topVersionChanged(QString topVersion);
     void adbPath_changed();
 
 public slots:
@@ -269,6 +314,7 @@ private slots:
     void on_RewriteFullFileSignal(QString strPath, QString appendString);
 
     void on_adbPath_changed();
+    void getDeviceInfo(int);
 
 };
 

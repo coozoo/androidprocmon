@@ -303,6 +303,8 @@ adbViewer::adbViewer(QWidget *parent) : QWidget(parent)
     //change refresh devices connections
     connect(refreshDevices_toolbutton,SIGNAL(clicked()),this,SLOT(on_refreshDevices_toolbutton_clicked()));
     connect(devicesList_combobox,SIGNAL(currentIndexChanged(int)),this,SLOT(on_devicesList_combobox_currentIndexChanged(int)));
+    connect(devicesList_combobox,SIGNAL(currentIndexChanged(int)),this,SLOT(getDeviceInfo(int)));
+
     //on logcat stopped and started
     connect(proc,SIGNAL(finished(int)),this,SLOT(on_proc_closed(int)));
     connect(proc,SIGNAL(started()),this,SLOT(on_proc_started()));
@@ -417,7 +419,6 @@ void adbViewer::on_devicesList_combobox_currentIndexChanged(int)
             startlogcat();
         }
     setandroidDevice(this->devicesList_combobox->currentText());
-
 }
 
 /* Slot on logcat process closed */
@@ -521,6 +522,21 @@ QString adbViewer::executeADBCommand(QString adbCommand)
         }
     adbexec.close();
     return result;
+
+// Found in one of forums. I like this implementation of exec but need to test what is better somewhen
+//    QString result;
+//    QEventLoop looper;
+//    QProcess *p = new QProcess(&looper);
+//    p->setProcessChannelMode(QProcess::MergedChannels);
+//    QObject::connect(p,static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),&looper,&QEventLoop::quit);
+//    QObject::connect(p,&QProcess::errorOccurred,[&result]()->void{qDebug("Error in Process"); result.clear();});
+//    QObject::connect(p,&QProcess::errorOccurred,&looper,&QEventLoop::quit);
+//    QObject::connect(p,&QProcess::readyReadStandardOutput,[p,&result]()->void{result+=p->readAllStandardOutput();});
+//    const QString c = QString(adbBinary + " " + adbCommand);
+//    p->start(c);
+//    looper.exec();
+//    p->deleteLater();
+//    return result;
 }
 
 //not connected slot anymore
@@ -605,14 +621,42 @@ void adbViewer::updateText()
 
 /* Function to get process list by executing top command
  * maybe you will find this parsing dumb (so you'll be right)
+ * yes confirmed it's dumb
+ * but in order to handle old and new devices it will be dumber
  */
 void adbViewer::getProcesslist()
 {
     clearProcesslist();
+    QTextStream cout(stdout);
     //run top one time with delay one second
-    QString command="-s " + devicesList_combobox->currentText() + " shell top -n 1 -d 1";
+    QString command="-s " + devicesList_combobox->currentText() + " shell " + topCommand + " -n 1 -d 1";
+    cout<<"topversion:"<<gettopVersion()<<";"<<endl;
+    if(gettopVersion().toLower().contains("toybox"))
+    {
+        command+=" -b -o Pid,User,PR,NI,VIRT,RES,SHR,S,%CPU,%MEM,pcy,Name";
+    }
+    else if(gettopVersion().toLower().contains("busybox"))
+    {
+        command+=" -b";
+    }
+    cout<<command<<endl;
     QString result;
     result=executeADBCommand(command);
+    //one more stupud thing to handle bug with column names
+    result.replace("S[%CPU]","S %CPU ");
+    //another stupid thing for busybox only
+    if(gettopVersion().toLower().contains("busybox"))
+    {
+        result.replace(QRegularExpression("(\\d)m(\\d)"),"\\1m \\2");
+        //busybox shows command instead names so this attempt to get names from command
+        //change column name
+        result.replace(" COMMAND"," Name");
+        //set of shitty rules to remove shit
+        result.replace(QRegularExpression("\\{.+\\} (.+)"),"\\1");
+        result.replace(QRegularExpression("\\[(.+)\\]"),"\\1");
+        result.replace(QRegularExpression("(.+)@.+"),"\\1");
+        result.replace(QRegularExpression("(\\d+\\s+\\d+\\s+\\d+\\.\\d+\\s+[^\\s]+\\s).+"),"\\1");
+    }
     QStringList allprocesses;
     allprocesses.append(result.split("\n"));
     //qDebug()<<allprocesses;
@@ -620,7 +664,9 @@ void adbViewer::getProcesslist()
     //stupid handler of old android stupid behaviour
     //pcyColID to handling old top empty policy
     //(column in some strings simply empty so you've got less columns then header)
+    //really it's not funny in old busybox policy it's state and it can contain spaces
     int pcyColID=-1;
+    int vszColID=-1;
     int rowj=0;
     int columnHeaderCount=0;
     foreach (const QString &str, allprocesses)
@@ -641,7 +687,7 @@ void adbViewer::getProcesslist()
 
             //qDebug() << destr.split(" ");
             //now we have only one space between each column
-            QStringList valuesList=destr.split(" ");
+            QStringList valuesList=destr.split(" ",QString::SkipEmptyParts);
             if(valuesList.count()>=1)
                 {
                     //first string supposed to be pid (int value)
@@ -649,7 +695,7 @@ void adbViewer::getProcesslist()
                     //it's no 100% way but at least good to check before start
                     bool ok;
                     int first = valuesList[0].toInt(&ok);
-                    Q_UNUSED(first);
+                    Q_UNUSED(first)
                     //and we need don't miss a header which start from PID word
                     if (ok || valuesList[0].toLower()=="pid")
                         {
@@ -661,12 +707,16 @@ void adbViewer::getProcesslist()
                                     if(valuesList[0].toLower()=="pid")
                                         {
                                             //if it's header than add headers to tableview
-                                            columnHeaderCount=valuesList.count()-1;
+                                            columnHeaderCount=valuesList.count();
                                             processList_model->setHorizontalHeaderItem(coli, new QStandardItem(QString(col)));
                                             //find and remember pcy column ID we will need it later
                                             if(col.toLower()=="pcy")
                                             {
                                                 pcyColID=coli;
+                                            }
+                                            if(col.toLower()=="vsz")
+                                            {
+                                                vszColID=coli;
                                             }
                                         }
                                     else
@@ -679,10 +729,24 @@ void adbViewer::getProcesslist()
                                              * so if the last charachter in column is K simply remove it
                                              * if M and G multiply them accordingly
                                              * */
-                                            if(columnvalue.right(1)=="K" || columnvalue.right(1)=="M" || columnvalue.right(1)=="G")
+                                            if(columnvalue.right(1)=="K" || columnvalue.right(1)=="M" || columnvalue.right(1)=="G" || columnvalue.right(1)=="m")
                                                 {
                                                     bool leftOK;
+                                                    int floatplaces=0;
+                                                    //convert number to int works fine for oder androids
                                                     double leftvalue = columnvalue.left(columnvalue.length()-1).toInt(&leftOK);
+                                                    //if not ok then try to convert it as double
+                                                    if(!leftOK)
+                                                    {
+                                                        //get amount of numbers after dot, i've seen only one, but who knows..
+                                                        if(columnvalue.left(columnvalue.length()-1).split(".").count()>1)
+                                                        {
+                                                            floatplaces=columnvalue.left(columnvalue.length()-1).split(".")[1].length();
+                                                        }
+                                                        leftvalue = columnvalue.left(columnvalue.length()-1).toDouble(&leftOK);
+
+                                                    }
+
                                                     if(leftOK && leftvalue!=0)
                                                         {
                                                         if(columnvalue.right(1)=="K")
@@ -691,11 +755,15 @@ void adbViewer::getProcesslist()
                                                             }
                                                         else if(columnvalue.right(1)=="M")
                                                             {
-                                                                columnvalue=QString::number(leftvalue*1024);
+                                                                columnvalue=QString::number(leftvalue*1024,'f',floatplaces);
                                                             }
                                                         else if(columnvalue.right(1)=="G")
                                                             {
-                                                                columnvalue=QString::number(leftvalue*1024*1024);
+                                                                columnvalue=QString::number(leftvalue*1024*1024,'f',floatplaces);
+                                                            }
+                                                        else if(columnvalue.right(1)=="m")
+                                                            {
+                                                                columnvalue=QString::number(leftvalue*1024,'f',floatplaces);
                                                             }
 
                                                         }
@@ -719,15 +787,28 @@ void adbViewer::getProcesslist()
                                                 }
                                             // another stupid thing if we got more columns with data then actuall in header
                                             // yes it's possible because some process names contain a space...
-                                            if(coli>columnHeaderCount)
+                                            if(coli>=columnHeaderCount)
                                                 {
-                                                    // some weird minuses and we are appending current value to previous column with adding space
-                                                    QString prevvalue=processList_model->data(processList_model->index(rowj-1,coli-(coli-columnHeaderCount))).toString();
-                                                    processList_model->setItem(rowj-1,coli-(coli-columnHeaderCount),new QStandardItem(QString(prevvalue + " " + columnvalue)));
+                                                    // some weird minuses and we are appending current value to previous column with adding spaceS
+                                                    QString prevvalue=processList_model->data(processList_model->index(rowj-1,columnHeaderCount-1)).toString();
+                                                    processList_model->setItem(rowj-1,columnHeaderCount-1,new QStandardItem(QString(prevvalue + " " + columnvalue)));
+                                                    processList_model->removeColumns(columnHeaderCount,1);
+                                                    //cout<<prevvalue<<columnvalue<<endl;
                                                 }
                                             else
                                                 {
-                                                // yes here it is pcy column id we are expecting to get bg or fg calues
+                                                //actually don't wanna fix it a lot just handle out and as result policy will be a bit incorrect
+                                                if(gettopVersion().toLower().contains("busybox") && vszColID!=-1 && coli==vszColID)
+                                                {
+                                                    bool ok;
+                                                    int temp=columnvalue.toInt(&ok);
+                                                    Q_UNUSED(temp)
+                                                    if(!ok)
+                                                    {
+                                                        coli--;
+                                                    }
+                                                }
+                                                // yes here it is pcy column id we are expecting to get bg or fg values
                                                 // if it's something else then replace it with - and go to the next column of table
                                                 //if(pcyColID!=-1 && coli==pcyColID && (columnvalue!="bg" && columnvalue!="fg" && columnvalue!="unk"))
                                                 if(pcyColID!=-1 && coli==pcyColID && !policyList.contains(columnvalue))
@@ -774,7 +855,7 @@ void adbViewer::getProcesslist()
  */
 void adbViewer::getProcesslist_error()
 {
-    QProcess *topProcessExec = (QProcess *)sender();
+    QProcess *topProcessExec = static_cast<QProcess *>(sender());
     QString appendText(topProcessExec->readAll());
     QTextStream cout(stdout);
     cout<<appendText<<endl;
@@ -793,7 +874,7 @@ void adbViewer::getProcesslist_error()
 
 void adbViewer::getProcesslist_standard()
 {
-    QProcess *topProcessExec = (QProcess *)sender();
+    QProcess *topProcessExec = static_cast<QProcess *>(sender());
     QString appendText(topProcessExec->readAll());
     QTextStream cout(stdout);
     cout<<appendText<<endl;
@@ -810,7 +891,7 @@ void adbViewer::getProcesslist_standard()
 
 void adbViewer::on_topProcessExec_closed(int reason)
 {
-    QProcess *topProcessExec = (QProcess *)sender();
+    QProcess *topProcessExec = static_cast<QProcess *>(sender());
     QTextStream cout(stdout);
     cout<<reason<<endl;
     processListStatus_lineedit->setText(processListStatus_lineedit->text() + " Adb closed " + QString::number(reason));
@@ -838,6 +919,7 @@ void adbViewer::clearProcesslist()
 }
 
 /* function that launching top process with delay
+ * yes I know there is code dublication...
  */
 void adbViewer::startProcessTopStat()
 {
@@ -849,11 +931,31 @@ void adbViewer::startProcessTopStat()
             if(processTopStatFilter_lineedit->text()!="")
                 {
                     //get headers
-                    QString headercommand="-s " + devicesList_combobox->currentText() + " shell top -n 1 -d 1|grep -i pid|grep -i cpu";
+                    QString headercommand="-s " + devicesList_combobox->currentText() + " shell " + topCommand + " -n 1 -d 1";
+                    if(gettopVersion().toLower().contains("toybox"))
+                    {
+                        headercommand+=" -b -o Pid,User,PR,NI,VIRT,RES,SHR,S,%CPU,%MEM,pcy,Name|grep -v grep";
+                    }
+                    else if(gettopVersion().toLower().contains("busybox"))
+                    {
+                        headercommand+=" -b |grep -v grep";
+                    }
+                    headercommand+="|grep -i pid|grep -i cpu";
                     QTextStream cout(stdout);
                     cout<<"headercommand: "<<headercommand<<endl;
                     QString result;
                     result=executeADBCommand(headercommand);
+                    result.replace("S[%CPU]","S %CPU ");
+                    if(gettopVersion().toLower().contains("toybox"))
+                    {
+                        result.replace(" NAME"," NAME #THR");
+                    }
+                    else if(gettopVersion().toLower().contains("busybox"))
+                    {
+                        result.replace(" COMMAND"," Name RSS #THR");
+                    }
+
+                    //another stupid thing for busybox only
                     //QStringList allprocesses;
                     //allprocesses.append(result.split("\n"));
                     result=result.trimmed();
@@ -862,7 +964,21 @@ void adbViewer::startProcessTopStat()
                             result.replace(QString("  "),QString(" "));
                         }
                     //get system data and "headers" actually all of this in one row
-                    QString totalcpucommand="-s " + devicesList_combobox->currentText() + " shell top -n 1 -d 1|grep User|grep System";
+                    QString totalcpucommand="-s " + devicesList_combobox->currentText() + " shell " + topCommand + " -n 1 -d 1";
+                    if(gettopVersion().toLower().contains("toybox"))
+                    {
+                        totalcpucommand+=" -b -o Pid,User,PR,NI,VIRT,RES,SHR,S,%CPU,%MEM,pcy,Name";
+                        totalcpucommand+="|grep -v grep|grep user|grep sys";
+                    }
+                    else if(gettopVersion().toLower().contains("busybox"))
+                    {
+                        totalcpucommand+=" -b";
+                        totalcpucommand+="|grep -v grep|grep usr|grep sys";
+                    }
+                    else
+                    {
+                        totalcpucommand+="|grep User|grep System";
+                    }
                     cout<<"totalcpucommand: "<<totalcpucommand<<endl;
                     // remove all multiple spaces
                     QString resulttotalcpu;
@@ -879,18 +995,42 @@ void adbViewer::startProcessTopStat()
                     cout<<resulttotalcpu<<endl;
                     //make table headers for total CPU system, user...
                     QString resulttotalcpuHeaders;
-                    foreach (QString str, resulttotalcpu.split(" "))
-                        {
-                            if(str!= "" && !str.contains("%"))
+                    if(gettopVersion()=="")
+                    {
+                        foreach (QString str, resulttotalcpu.split(" "))
+                            {
+                                if(str!= "" && !str.contains("%"))
                                 {
                                     resulttotalcpuHeaders=resulttotalcpuHeaders +"CPU("+str + ") ";
                                     totalCPUcolumnCounter++;
                                 }
-
-                        }
-
+                            }
+                    }
+                    else if(gettopVersion().toLower().contains("toybox"))
+                    {
+                        foreach (QString str, resulttotalcpu.split(" "))
+                            {
+                                if(str!= "" && str.contains("%"))
+                                {
+                                    resulttotalcpuHeaders=resulttotalcpuHeaders +"CPU("+str.split("%")[1] + ") ";
+                                    totalCPUcolumnCounter++;
+                                }
+                            }
+                    }
+                    else if(gettopVersion().toLower().contains("busybox"))
+                    {
+                        foreach (QString str, resulttotalcpu.replace("CPU:","").split(" "))
+                            {
+                                if(str!= "" && !str.contains("%"))
+                                {
+                                    resulttotalcpuHeaders=resulttotalcpuHeaders +"CPU("+str + ") ";
+                                    totalCPUcolumnCounter++;
+                                }
+                            }
+                    }
                     //add time header
                     result="Time " + resulttotalcpuHeaders + result;
+                    cout<<result<<endl;
                     // and now add all headers to table view
                     QStringList headersList=result.split(" ");
                     if(headersList.count()>=1)
@@ -906,8 +1046,19 @@ void adbViewer::startProcessTopStat()
                     //actually here is the start top with delay parameter
                     //tried a lot of devices looks like this way should work
                     //to get system and process data
-                    QString command=adbBinary + " -s " + devicesList_combobox->currentText() + " shell top -d " + processTopStatTimeout_spinbox->text() + " | grep --line-buffered -E '" + processTopStatFilter_lineedit->text() +"$|User.*System'| cat";
+                    QString command=adbBinary + " -s " + devicesList_combobox->currentText() + " shell " + topCommand + " -d " + processTopStatTimeout_spinbox->text();
+                    if(gettopVersion().toLower().contains("toybox"))
+                    {
+                        command+=" -b -o Pid,User,PR,NI,VIRT,RES,SHR,S,%CPU,%MEM,pcy,Name ";
+                        command+= " |grep -v grep| grep --line-buffered -E '" + processTopStatFilter_lineedit->text() +"$|user.*sys'| cat";
+                    }
+                    else if(gettopVersion().toLower().contains("busybox"))
+                    {
+                        command+=" -b";
+                        command+= " |grep -v grep| grep --line-buffered -E '" + processTopStatFilter_lineedit->text() +"$|usr.*sys'| cat";
+                    }
                     cout<<command<<endl;
+
                     processTopStatExec->start(command);
                     processTopStatFilter_lineedit->setEnabled(false);
                     processTopStatTimeout_spinbox->setEnabled(false);
@@ -960,13 +1111,26 @@ void adbViewer::on_processTopStat_closed(int reason)
 //slot to handle when new data from top process received
 void adbViewer::processTopStatUpdateText()
 {
+    QTextStream cout(stdout);
     //timestamp date
     QString dt= QDateTime::currentDateTime().toString("dd/MM/yyyy_hh:mm:ss");
     QString appendText(processTopStatExec->readAll());
     qDebug()<<appendText;
-
     //pcyColID to handling old top empty policy
     int pcyColID=getHeaderIDbyNameOfProcessTopStat("PCY");
+    int vszColID=getHeaderIDbyNameOfProcessTopStat("VSZ");
+    if(gettopVersion().toLower().contains("busybox"))
+    {
+        appendText.replace(QRegularExpression("(\\d)m(\\d)"),"\\1m \\2");
+        //busybox shows command instead names so this attempt to get names from command
+        //change column name
+        appendText.replace(" COMMAND"," Name");
+        //set of shitty rules to remove shit
+        appendText.replace(QRegularExpression("\\{.+\\} (.+)"),"\\1");
+        appendText.replace(QRegularExpression("\\[(.+)\\]"),"\\1");
+        appendText.replace(QRegularExpression("(.+)@.+"),"\\1");
+        appendText.replace(QRegularExpression("(\\d+\\s+\\d+\\s+\\d+\\.\\d+\\s+[^\\s]+\\s).+"),"\\1");
+    }
 
     if(!appendText.contains(devicesList_combobox->currentText()))
         {
@@ -975,12 +1139,12 @@ void adbViewer::processTopStatUpdateText()
             //get system CPU
             foreach (QString str, appendText.split("\n"))
                 {
-                    if(str.contains("System") && str.contains("User"))
+                    if((str.contains("System") && str.contains("User")) || (str.contains("sys") && (str.contains("user") || str.contains("usr"))) )
                         {
                             totalCPULoadString=str.left(str.indexOf("\n"));
-                            QTextStream cout(stdout);
+
                             cout<<"totalCPULoadString"<<totalCPULoadString<<endl;
-                            totalCPULoadString=totalCPULoadString.trimmed();
+                            totalCPULoadString=totalCPULoadString.replace("CPU:","").trimmed();
                         }
                     else if(str.contains(processTopStatFilter_lineedit->text()))
                         {
@@ -999,20 +1163,35 @@ void adbViewer::processTopStatUpdateText()
                                 {
                                     totalCPULoadString.replace(QString("  "),QString(" "));
                                 }
-
+                            if(gettopVersion()=="")
+                            {
                             foreach (QString str, totalCPULoadString.split(" "))
                                 {
+
                                     if(str.contains("%"))
+                                    //if(str.right(1)=="%")
                                         {
                                             totalCPUdataline=totalCPUdataline+str.replace("%","").replace(",","")+" ";
                                         }
                                 }
+                            }
+                            else
+                            {
+                                foreach (QString str, totalCPULoadString.split(" "))
+                                    {
+
+                                        if(str.contains("%"))
+                                            {
+                                                totalCPUdataline=totalCPUdataline+str.split("%")[0]+" ";
+                                            }
+                                    }
+                            }
                             totalCPUBuffer=totalCPUdataline;
 
                         }
                     else if(totalCPULoadString!="" && totalCPUBuffer=="")
                         {
-                            totalCPUBuffer="    ";
+                            totalCPUBuffer=QString(" ").repeated(totalCPUcolumnCounter);
                         }
                 }
 
@@ -1047,10 +1226,22 @@ void adbViewer::processTopStatUpdateText()
                                             columnvalue.replace("_"," ");
                                         }
                                     //qDebug()<<columnvalue.left(columnvalue.length()-1)<<columnvalue.right(1);
-                                    if(columnvalue.right(1)=="K" || columnvalue.right(1)=="M" || columnvalue.right(1)=="G" || columnvalue.right(1)=="%")
+                                    if(columnvalue.right(1)=="K" || columnvalue.right(1)=="M" || columnvalue.right(1)=="G" || columnvalue.contains("%") || columnvalue.right(1)=="m")
                                         {
+                                            int floatplaces=0;
                                             bool leftOK;
                                             double leftvalue = columnvalue.left(columnvalue.length()-1).toInt(&leftOK);
+                                            //if not ok then try to convert it as double
+                                            if(!leftOK)
+                                            {
+                                                //get amount of numbers after dot, i've seen only one, but who knows..
+                                                if(columnvalue.left(columnvalue.length()-1).split(".").count()>1)
+                                                {
+                                                    floatplaces=columnvalue.left(columnvalue.length()-1).split(".")[1].length();
+                                                }
+                                                leftvalue = columnvalue.left(columnvalue.length()-1).toDouble(&leftOK);
+
+                                            }
                                             if(leftOK && leftvalue!=0)
                                                 {
                                                 if(columnvalue.right(1)=="K")
@@ -1059,16 +1250,24 @@ void adbViewer::processTopStatUpdateText()
                                                     }
                                                 else if(columnvalue.right(1)=="M")
                                                     {
-                                                        columnvalue=QString::number(leftvalue*1024);
+                                                        columnvalue=QString::number(leftvalue*1024,'f',floatplaces);
                                                     }
                                                 else if(columnvalue.right(1)=="G")
                                                     {
-                                                        columnvalue=QString::number(leftvalue*1024*1024);
+                                                        columnvalue=QString::number(leftvalue*1024*1024,'f',floatplaces);
+                                                    }
+                                                else if(columnvalue.right(1)=="m")
+                                                    {
+                                                        columnvalue=QString::number(leftvalue*1024,'f',floatplaces);
                                                     }
                                                     else if(columnvalue.right(1)=="%")
                                                         {
                                                             columnvalue.replace("%","");
                                                         }
+                                                    else if(columnvalue.contains("%") && columnvalue.right(1)!="%")
+                                                    {
+                                                        columnvalue=columnvalue.split("%")[0];
+                                                    }
 
                                                 }
                                             else if(leftOK && leftvalue==0)
@@ -1092,6 +1291,23 @@ void adbViewer::processTopStatUpdateText()
                                                 }
 
                                         }
+                                    if(columnvalue.contains(QRegularExpression("\\d+\\.\\d+")))
+                                    {
+                                        //int floatplaces=0;
+                                        bool OK;
+                                        double value = columnvalue.toDouble(&OK);
+                                        //if not ok then try to convert it as double
+                                        if(OK)
+                                        {
+                                            //get amount of numbers after dot, i've seen only one, but who knows..
+//                                            if(columnvalue.split(".").count()>1)
+//                                            {
+//                                                floatplaces=columnvalue.split(".")[1].length();
+//                                            }
+
+                                            columnvalue=QString::number(value,'f',0);
+                                        }
+                                    }
                                     if(coli>columncount)
                                         {
                                             QString prevvalue=processTopStat_model->data(processTopStat_model->index(rowj,coli-(coli-columncount))).toString();
@@ -1099,6 +1315,16 @@ void adbViewer::processTopStatUpdateText()
                                         }
                                     else
                                         {
+                                        if(gettopVersion().toLower().contains("busybox") && vszColID!=-1 && coli==vszColID)
+                                        {
+                                            bool ok;
+                                            int temp=columnvalue.toInt(&ok);
+                                            Q_UNUSED(temp)
+                                            if(!ok)
+                                            {
+                                                coli--;
+                                            }
+                                        }
                                         //if(pcyColID!=-1 && coli==pcyColID && (columnvalue!="bg" && columnvalue!="fg"  && columnvalue!="unk"))
                                         if(pcyColID!=-1 && coli==pcyColID && !policyList.contains(columnvalue))
                                         {
@@ -1121,11 +1347,25 @@ void adbViewer::processTopStatUpdateText()
 
                                         }
 
-
-
-
                                     coli++;
                                 }
+                            //really soon I will end up with my own memoory parser... I thoutght top parsing will be easier..
+                            if(gettopVersion().toLower().contains("busybox"))
+                            {
+                                QString rsscommand=" -s " + devicesList_combobox->currentText() + " shell cat /proc/" + processTopStat_model->data(processTopStat_model->index(rowj,getHeaderIDbyNameOfProcessTopStat("PID"))).toString()+"/status|grep RSS|grep -Eo '[0-9]{1,50}'";
+                                QString resultrss;
+                                resultrss=executeADBCommand(rsscommand);
+                                resultrss=resultrss.trimmed();
+                                processTopStat_model->setItem(rowj,getHeaderIDbyNameOfProcessTopStat("RSS"),new QStandardItem(QString(resultrss)));
+                            }
+                            if(gettopVersion().toLower().contains("busybox") || gettopVersion().toLower().contains("toybox"))
+                            {
+                                QString thrcommand=" -s " + devicesList_combobox->currentText() + " shell ls /proc/" + processTopStat_model->data(processTopStat_model->index(rowj,getHeaderIDbyNameOfProcessTopStat("PID"))).toString()+"/task|wc -l";
+                                QString resultthr;
+                                resultthr=executeADBCommand(thrcommand);
+                                resultthr=resultthr.trimmed();
+                                processTopStat_model->setItem(rowj,getHeaderIDbyNameOfProcessTopStat("#THR"),new QStandardItem(QString(resultthr)));
+                            }
 
                             //write top process stat into file
                             QString headersList="";
@@ -1235,7 +1475,7 @@ int adbViewer::getHeaderIDbyNameOfProcessDumpsysStat(QString columnName)
  */
 void adbViewer::ShowContextMenu_processList_tableview(const QPoint& pos)
 {
-    QTableView *tableview = (QTableView *)sender();
+    QTableView *tableview = static_cast<QTableView *>(sender());
     // for most widgets
 
     QPoint globalPos = tableview->mapToGlobal(pos);
@@ -1370,7 +1610,7 @@ void adbViewer::writeStatCSV(QString appendFileName, QString logLine, QString he
     int inputcolumns=headersList.split(",").count();
     if(inputcolumns>filecolumns)
     {
-        int addcommaamount=inputcolumns-filecolumns;
+        //int addcommaamount=inputcolumns-filecolumns;
         //call rewrite file
         QFile newFile(filepath+".new");
         if (!(outFile.open(QIODevice::ReadOnly | QIODevice::Text) && newFile.open(QIODevice::WriteOnly | QIODevice::Append)))return;
@@ -1516,7 +1756,7 @@ void adbViewer::on_dumpsysProcTimer()
                                         {
                                             bool ok;
                                             int first = columnsStrings[columni+1].toInt(&ok);
-                                            Q_UNUSED(first);
+                                            Q_UNUSED(first)
                                             if(ok)
                                                 {
                                                     headerLine=headerLine+"pid,";
@@ -1995,3 +2235,61 @@ void adbViewer::on_adbPath_changed()
     execute_dock->setadbBinary(getadbBinary());
 }
 
+void adbViewer::getDeviceInfo(int)
+{
+    QTextStream cout(stdout);
+
+    QString commandAndroidVersion="-s " + devicesList_combobox->currentText() + " shell getprop ro.build.version.release";
+    QString resultAndroidVersion;
+    resultAndroidVersion=executeADBCommand(commandAndroidVersion).simplified();
+    setandroidVersion(resultAndroidVersion);
+    cout<<resultAndroidVersion<<endl;
+
+    QString commandSDKVersion="-s " + devicesList_combobox->currentText() + " shell getprop ro.build.version.sdk";
+    QString resultSDKVersion;
+    resultSDKVersion=executeADBCommand(commandSDKVersion).simplified();
+    setandroidSDK(resultSDKVersion);
+    cout<<resultSDKVersion<<endl;
+
+    //find out top version
+    //as far as I know there is three main tops that leads to such cases
+    //1. old one (not sure what is origin maybe old toybox) android top with very limited functionality
+    //2. busybox sometimes it can be by default usualy only inside customized firmwares
+    //3. toybox with stupid bug in batch mode with no updating data it's version 7
+    //4. toybox version 8 and greater where data updates fine
+    // actually I haven't seen device with built in fixed new toybox...
+    QString commandTopVersion="-s " + devicesList_combobox->currentText();
+    QString resultTopVersion;
+    //try old top only if anroid older than 8
+    int andver=resultSDKVersion.toInt();
+    if(andver<26)
+    {
+        resultTopVersion=executeADBCommand(commandTopVersion + " shell top --version").simplified();
+        topCommand=" top ";
+    }
+    else
+    {
+        resultTopVersion=executeADBCommand(commandTopVersion + " shell top --version 2>&1|grep -iv unrecognized|head -1").simplified();
+        if(resultTopVersion.toLower().contains("toybox") && resultTopVersion.contains("0.7."))
+        {
+            //try maybe we have busybox
+            resultTopVersion=executeADBCommand(commandTopVersion + " shell busybox top --version 2>&1|grep -iv unrecognized|head -1").simplified();
+            if(resultTopVersion.toLower().contains("busybox"))
+            {
+                topCommand=" busybox top ";
+            }
+        }
+        else
+        {
+            topCommand=" top ";
+        }
+    }
+    //just to be sure that default it contains top
+    if(topCommand=="")
+    {
+        topCommand=" top ";
+    }
+    settopVersion(resultTopVersion);
+    cout<<resultTopVersion<<endl;
+    cout<<topCommand<<endl;
+}
