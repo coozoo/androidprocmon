@@ -181,17 +181,33 @@ adbViewer::adbViewer(QWidget *parent) : QWidget(parent)
     processDumpsysStat_tableview->horizontalHeader()->setDragEnabled(true);
     processDumpsysStat_tableview->horizontalHeader()->setDragDropMode(QAbstractItemView::InternalMove);
 
+    //labels with android version and sdk
+    androidVersion_label=new QLabel();
+    androidVersion_label->setText(tr(" Android: - "));
+    androidVersion_label->setStyleSheet("QLabel { background-color : #e8e8e8; color : black; }");
+
+    androidSDK_label=new QLabel();
+    androidSDK_label->setStyleSheet("QLabel { background-color : #e8e8e8; color : black; }");
+    androidSDK_label->setText(tr(" SDK: - "));
+
+
+    connect(this,&adbViewer::androidVersionChanged,this,&adbViewer::on_androidVersionChanged);
+    connect(this,&adbViewer::androidSDKChanged,this,&adbViewer::on_androidSDKChanged);
+
 
     //layout for device list and refresh button
     toolbar_hboxlayout=new QHBoxLayout();
     //combobox for devices returned by adb
     devicesList_combobox=new QComboBox();
+    devicesList_combobox->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
     //refresh button to get sevices from adb
     refreshDevices_toolbutton=new QToolButton;
     refreshDevices_toolbutton->setToolTip(tr("Refresh Devices (All activities will be stopped)"));
     refreshDevices_toolbutton->setText(tr("Refresh"));
     //place devices combobox and refresh button to layout
     toolbar_hboxlayout->addWidget(devicesList_combobox);
+    toolbar_hboxlayout->addWidget(androidVersion_label);
+    toolbar_hboxlayout->addWidget(androidSDK_label);
     toolbar_hboxlayout->addWidget(refreshDevices_toolbutton);
     //add it to main layout
     main_gridlayout->addLayout(toolbar_hboxlayout,0,0);
@@ -2292,4 +2308,13 @@ void adbViewer::getDeviceInfo(int)
     settopVersion(resultTopVersion);
     cout<<resultTopVersion<<endl;
     cout<<topCommand<<endl;
+}
+
+void adbViewer::on_androidSDKChanged(QString androidSDK)
+{
+    androidSDK_label->setText(androidSDK_label->text().split(":")[0]+": "+androidSDK + " ");
+}
+void adbViewer::on_androidVersionChanged(QString androidVersion)
+{
+    androidVersion_label->setText(androidVersion_label->text().split(":")[0]+": "+androidVersion + " ");
 }

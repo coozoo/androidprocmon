@@ -26,6 +26,7 @@
 #include <QLineEdit>
 #include <QToolBox>
 #include <QComboBox>
+#include <QLabel>
 #include <QToolButton>
 #include <QPushButton>
 #include <QCheckBox>
@@ -35,6 +36,7 @@
 #include <QHeaderView>
 #include <QLineEdit>
 #include <QScrollBar>
+#include <QSizePolicy>
 #include <QMenu>
 #include <QDir>
 #include <QFile>
@@ -158,6 +160,8 @@ public:
     adbExecute *execute_dock;
 
     QComboBox *devicesList_combobox;
+    QLabel *androidVersion_label;
+    QLabel *androidSDK_label;
     void startlogcat();
 
     QStringList policyList;
@@ -314,6 +318,8 @@ private slots:
     void on_RewriteFullFileSignal(QString strPath, QString appendString);
 
     void on_adbPath_changed();
+    void on_androidSDKChanged(QString androidSDK);
+    void on_androidVersionChanged(QString androidVersion);
     void getDeviceInfo(int);
 
 };

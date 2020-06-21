@@ -6,7 +6,7 @@
 #include <QTranslator>
 #include <QSettings>
 
-const QString APP_VERSION = "0.8.0b";
+const QString APP_VERSION = "0.8.1b";
 
 int main(int argc, char *argv[])
 {
