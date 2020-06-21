@@ -9,7 +9,7 @@
 Summary: Android Process Monitor some  kind of GUI for adb command. That allows monitor process perfomance using dumpsys and top.
 Name: %{name}
 Version: %{version}
-Release: %{build_timestamp}
+Release: %{build_timestamp}%{?dist}
 Source0: https://github.com/coozoo/androidprocmon/archive/master.zip#/%{name}-%{version}-%{release}.tar.gz
 
 
