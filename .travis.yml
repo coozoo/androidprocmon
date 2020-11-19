@@ -47,7 +47,7 @@ install:
         windows)
           $msys2 pacman --sync --clean --noconfirm
           $msys2 pacman -S --noconfirm base-devel git mercurial cvs wget p7zip
-          $msys2 pacman -S --noconfirm perl ruby python2 mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain
+          $msys2 pacman -S --noconfirm perl ruby mingw-w64-i686-toolchain mingw-w64-x86_64-toolchain
           $msys2 pacman -S --noconfirm mingw-w64-x86_64-qt5
           $msys2 pacman -S --noconfirm mingw-w64-x86_64-zlib zlib-devel
           #$msys2 pacman -S --noconfirm mingw-w64-x86_64-openssl openssl-devel
