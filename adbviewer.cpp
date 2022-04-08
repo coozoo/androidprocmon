@@ -13,8 +13,9 @@ adbViewer::adbViewer(QWidget *parent) : QWidget(parent)
     processDumpsysAndroidVersion = "";
     adbBinary = whereAdbExists();
     //to handle over empty policy for an old android I need to know what policy need to be expected,
-    //in androis 7 "unk" and "er" where added I can't imagine what their purposes
-    policyList = QString("bg,fg,unk,er").split(",");
+    //in android 7 "unk" and "er" where added I can't imagine what their purposes
+    // at least from android 10 few more added and they're listed here https://android.googlesource.com/platform/system/core/+/android-n-iot-release-polk-at1/libcutils/sched_policy.cpp
+    policyList = QString("bg,fg,aa,as,ta,rt,rs,unk,error,er").split(",");
 
     //toolbox to place each section inside and layout for it
     main_gridlayout = new QGridLayout();
