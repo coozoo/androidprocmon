@@ -32,7 +32,8 @@ So it's very good when you need to test your application on android device and m
 %global debug_package %{nil}
 
 %prep
-%setup -q -n %{name}-%{version}
+#%setup -q -n %{name}-%{version}
+%setup -q -n %{name}-master
 
 %build
 # don't know maybe it's stupid me but lrelease in qt looks like runs after make file generation as result automatic file list inside qmake doesn't work
