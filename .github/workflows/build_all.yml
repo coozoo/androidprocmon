@@ -121,7 +121,7 @@ jobs:
           asset_name: androidprocmon_${{ steps.buildosx.outputs.VER_TAG_NAME }}.zip
           asset_content_type: application/zip
       - name: Setup MSYS2 env
-        if: matrix.config.os == 'windows-2016'
+        if: matrix.config.os == 'windows-2022'
         uses: msys2/setup-msys2@v2
         with:
           # Variant of the environment to set by default: MSYS, MINGW32 or MINGW64
@@ -151,13 +151,13 @@ jobs:
             openssl-devel
           shell: msys2 {0}
       - name: get app version
-        if: matrix.config.os == 'windows-2016'
+        if: matrix.config.os == 'windows-2022'
         run: |
           echo "::set-output name=VER_TAG_NAME::$(cat main.cpp |grep 'const QString APP'|awk -F\" '{print $2;}')"
         shell: msys2 {0}
         id: buildwin
       - name: make 64 win app
-        if: matrix.config.os == 'windows-2016'
+        if: matrix.config.os == 'windows-2022'
         run: |
           ls -l
           pwd
@@ -175,7 +175,7 @@ jobs:
           ls -l
         shell: msys2 {0}
       - name: make 32 win app
-        if: matrix.config.os == 'windows-2016'
+        if: matrix.config.os == 'windows-2022'
         run: |
           set MSYSTEM=MINGW32
           ROOTMSYS=/d/a/_temp/msys64/mingw32
@@ -189,7 +189,7 @@ jobs:
           mv release androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN32; 7z -tzip a androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN32.zip ./androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN32/
         shell: msys2 {0}
       - name: Upload Release Asset Win64
-        if: matrix.config.os == 'windows-2016'
+        if: matrix.config.os == 'windows-2022'
         id: upload-release-asset-win64
         uses: actions/upload-release-asset@v1
         env:
@@ -200,7 +200,7 @@ jobs:
           asset_name: androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN64.zip
           asset_content_type: application/zip
       - name: Upload Release Asset Win32
-        if: matrix.config.os == 'windows-2016'
+        if: matrix.config.os == 'windows-2022'
         id: upload-release-asset-win32
         uses: actions/upload-release-asset@v1
         env:
