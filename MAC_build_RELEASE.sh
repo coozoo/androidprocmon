@@ -1,6 +1,6 @@
 #!/bin/bash
 
-QT_DIR=/usr/local/Cellar/qt/
+QT_DIR=/usr/local/Cellar/qt@5/
 QT_DIR="$QT_DIR""$(ls $QT_DIR)"
 QMAKE=$QT_DIR/bin/qmake
 MAC_DEPLOY_TOOL=$QT_DIR/bin/macdeployqt
