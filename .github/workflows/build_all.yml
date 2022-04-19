@@ -1,0 +1,212 @@
+name: Release_Version
+
+on:
+  push:
+    branches: [ master ]
+# somehow I need to find way to addsteps
+#  pull_request:
+#    branches: [ master ]
+#    tags:
+#      - "v*"
+
+jobs:
+  create_release:
+    name: Create release
+    runs-on: ubuntu-18.04
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: get app version
+        run: |
+          echo "::set-output name=VER_TAG_NAME::$(cat main.cpp |grep 'const QString APP'|awk -F\" '{print $2;}')"
+        id: build
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.build.outputs.VER_TAG_NAME }}_${{ github.ref }}
+          release_name: Release CI ${{ steps.build.outputs.VER_TAG_NAME }} ${{ github.ref }}
+  build_release:
+    name: Build release
+    needs: create_release
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      matrix:
+        config:
+          - os: ubuntu-18.04
+          - os: macos-latest
+          - os: windows-2016
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: get app version
+        if: matrix.config.os == 'ubuntu-18.04'
+        run: |
+          echo "::set-output name=VER_TAG_NAME::$(cat main.cpp |grep 'const QString APP'|awk -F\" '{print $2;}')"
+        id: build
+      - name: add qt repo to linux
+        if: matrix.config.os == 'ubuntu-18.04'
+        run: |
+          sudo add-apt-repository ppa:beineri/opt-qt-5.12.0-bionic -y
+          sudo apt-get update -qq
+      - name: install qt into linux
+        if: matrix.config.os == 'ubuntu-18.04'
+        run:  sudo apt-get -y install qt512base qt512tools libgl1-mesa-dev
+      - name: build on linux
+        if: matrix.config.os == 'ubuntu-18.04'
+        run: |
+          source /opt/qt*/bin/qt*-env.sh || true
+          echo "::set-output name=VER_TAG_NAME::$(cat main.cpp |grep 'const QString APP'|awk -F\" '{print $2;}')"
+          qmake CONFIG+=release PREFIX=/usr
+          make -j$(nproc)
+          mkdir -p appdir/usr/bin
+          cp androidprocmon appdir/usr/bin/androidprocmon
+          mkdir -p appdir/usr/share/icons/
+          cp diff.png appdir/usr/share/icons/
+          mkdir -p appdir/usr/share/applications/
+          cp androidprocmon.desktop appdir/usr/share/applications/
+          wget -c -nv "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage"
+          chmod a+x linuxdeployqt-continuous-x86_64.AppImage
+          ./linuxdeployqt-continuous-x86_64.AppImage appdir/usr/share/applications/*.desktop -appimage
+          cp ./Qt_JSON_diff*.AppImage ./Qt_JSON_diff.AppImage
+          ls -l
+      - name: Upload Release Asset Linux AppImage
+        if: matrix.config.os == 'ubuntu-18.04'
+        id: upload-release-asset-linux-appimage
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./Qt_JSON_diff.AppImage
+          asset_name: Qt_JSON_diff-x86_64.AppImage
+          asset_content_type: application/octet-stream
+      - name: get app version
+        if: matrix.config.os == 'macos-latest'
+        run: |
+          echo "::set-output name=VER_TAG_NAME::$(cat main.cpp |grep 'const QString APP'|awk -F\" '{print $2;}')"
+        id: buildosx
+      - name: install qt OSX
+        if: matrix.config.os == 'macos-latest'
+        run: brew install qt5
+      - name: buid OSX
+        if: matrix.config.os == 'macos-latest'
+        run: |
+          chmod 777 MAC_build_RELEASE.sh
+          ./MAC_build_RELEASE.sh
+      - name: Upload Release Asset dmg
+        if: matrix.config.os == 'macos-latest'
+        id: upload-release-asset-dmg
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./androidprocmon_${{ steps.buildosx.outputs.VER_TAG_NAME }}.dmg
+          asset_name: androidprocmon_${{ steps.buildosx.outputs.VER_TAG_NAME }}.dmg
+          asset_content_type: application/octet-stream
+      - name: Upload Release Asset zip
+        if: matrix.config.os == 'macos-latest'
+        id: upload-release-asset-zip
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./androidprocmon_${{ steps.buildosx.outputs.VER_TAG_NAME }}.zip
+          asset_name: androidprocmon_${{ steps.buildosx.outputs.VER_TAG_NAME }}.zip
+          asset_content_type: application/zip
+      - name: Setup MSYS2 env
+        if: matrix.config.os == 'windows-2016'
+        uses: msys2/setup-msys2@v2
+        with:
+          # Variant of the environment to set by default: MSYS, MINGW32 or MINGW64
+          msystem: MSYS
+          # Default value for MSYS2_PATH_TYPE environment variable: strict, inherit or minimal
+          #path-type: # optional, default is minimal
+          # Retrieve and extract base installation from upstream GitHub Releases
+          #release: # optional, default is true
+          # Update MSYS2 installation through pacman
+          #update: # optional
+          # Install packages after installation through pacman
+          install: >-
+            mingw-w64-x86_64-toolchain
+            base-devel
+            git
+            p7zip
+            ruby
+            mingw-w64-x86_64-qt5
+            mingw-w64-i686-qt5
+            mingw-w64-i686-toolchain
+            mingw-w64-i686-qwt-qt5
+            mingw-w64-x86_64-zlib
+            mingw-w64-i686-zlib
+            zlib-devel
+            mingw-w64-x86_64-openssl
+            mingw-w64-i686-openssl
+            openssl-devel
+          shell: msys2 {0}
+      - name: get app version
+        if: matrix.config.os == 'windows-2016'
+        run: |
+          echo "::set-output name=VER_TAG_NAME::$(cat main.cpp |grep 'const QString APP'|awk -F\" '{print $2;}')"
+        shell: msys2 {0}
+        id: buildwin
+      - name: make 64 win app
+        if: matrix.config.os == 'windows-2016'
+        run: |
+          ls -l
+          pwd
+          set MSYSTEM=MINGW64
+          ROOTMSYS=/d/a/_temp/msys64/mingw64
+          export PATH=$ROOTMSYS/bin:$PATH
+          qmake
+          make
+          rm -f release/*.o; rm -f release/*.cpp; rm -f release/*.h
+          windeployqt.exe release/androidprocmon.exe
+          cp $ROOTMSYS/bin/zlib*.dll release/; cp $ROOTMSYS/bin/libgcc*.dll release/; cp $ROOTMSYS/bin/libwinpthread*.dll release/; cp $ROOTMSYS/bin/libstdc*.dll release/; cp $ROOTMSYS/bin/libdouble*.dll release/; cp $ROOTMSYS/bin/libicuin6*.dll release/; cp $ROOTMSYS/bin/libicuuc6*.dll release/; cp $ROOTMSYS/bin/libicudt6*.dll release/; cp $ROOTMSYS/bin/libpcre*.dll release/; cp $ROOTMSYS/bin/libzstd*.dll release/; cp $ROOTMSYS/bin/libharfbuzz*.dll release/; cp $ROOTMSYS/bin/libgraphite*.dll release/; cp $ROOTMSYS/bin/libfreetype*.dll release/; cp $ROOTMSYS/bin/libbrotlidec*.dll release/; cp $ROOTMSYS/bin/libbrotlicommon*.dll release/; cp $ROOTMSYS/bin/libbz*.dll release/; cp $ROOTMSYS/bin/libpng*.dll release/; cp $ROOTMSYS/bin/libglib*.dll release/; cp $ROOTMSYS/bin/libintl*.dll release/; cp $ROOTMSYS/bin/libiconv*.dll release/; cp $ROOTMSYS/bin/libpcre*.dll release/
+          cp $ROOTMSYS/bin/libcrypto*.dll release/; cp $ROOTMSYS/bin/libssl*.dll release/
+          mv release androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN64; 7z -tzip a androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN64.zip ./androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN64/
+          make clean
+          ls -l
+        shell: msys2 {0}
+      - name: make 32 win app
+        if: matrix.config.os == 'windows-2016'
+        run: |
+          set MSYSTEM=MINGW32
+          ROOTMSYS=/d/a/_temp/msys64/mingw32
+          export PATH=$ROOTMSYS/bin:$PATH
+          qmake
+          make
+          rm -f release/*.o; rm -f release/*.cpp; rm -f release/*.h;
+          windeployqt.exe release/androidprocmon.exe
+          cp $ROOTMSYS/bin/zlib*.dll release/; cp $ROOTMSYS/bin/libgcc*.dll release/; cp $ROOTMSYS/bin/libwinpthread*.dll release/; cp $ROOTMSYS/bin/libstdc*.dll release/; cp $ROOTMSYS/bin/libdouble*.dll release/; cp $ROOTMSYS/bin/libicuin6*.dll release/; cp $ROOTMSYS/bin/libicuuc6*.dll release/; cp $ROOTMSYS/bin/libicudt6*.dll release/; cp $ROOTMSYS/bin/libpcre*.dll release/; cp $ROOTMSYS/bin/libzstd*.dll release/; cp $ROOTMSYS/bin/libharfbuzz*.dll release/; cp $ROOTMSYS/bin/libgraphite*.dll release/; cp $ROOTMSYS/bin/libfreetype*.dll release/; cp $ROOTMSYS/bin/libbrotlidec*.dll release/; cp $ROOTMSYS/bin/libbrotlicommon*.dll release/; cp $ROOTMSYS/bin/libbz*.dll release/; cp $ROOTMSYS/bin/libpng*.dll release/; cp $ROOTMSYS/bin/libglib*.dll release/; cp $ROOTMSYS/bin/libintl*.dll release/; cp $ROOTMSYS/bin/libiconv*.dll release/; cp $ROOTMSYS/bin/libpcre*.dll release/;
+          cp $ROOTMSYS/bin/libcrypto*.dll release/; cp $ROOTMSYS/bin/libssl*.dll release/
+          mv release androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN32; 7z -tzip a androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN32.zip ./androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN32/
+        shell: msys2 {0}
+      - name: Upload Release Asset Win64
+        if: matrix.config.os == 'windows-2016'
+        id: upload-release-asset-win64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN64.zip
+          asset_name: androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN64.zip
+          asset_content_type: application/zip
+      - name: Upload Release Asset Win32
+        if: matrix.config.os == 'windows-2016'
+        id: upload-release-asset-win32
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN32.zip
+          asset_name: androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN32.zip
+          asset_content_type: application/zip
