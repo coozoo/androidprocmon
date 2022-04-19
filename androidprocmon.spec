@@ -3,7 +3,7 @@
 
 %define name androidprocmon
 %define reponame androidprocmon
-%define version %(echo "$(curl --silent 'https://raw.githubusercontent.com/coozoo/androidprocmon/master/main.cpp'|grep -oP '(?<=const QString APP_VERSION = \").*(?=\";)')")
+%define version %(echo "$(curl --silent 'https://raw.githubusercontent.com/coozoo/androidprocmon/master/main.cpp'|grep 'QString APP_VERSION'| tr -d ' '|grep -oP '(?<=constQStringAPP_VERSION=").*(?=\";)')")
 %define build_timestamp %{lua: print(os.date("%Y%m%d"))}
 
 Summary: Android Process Monitor some  kind of GUI for adb command. That allows monitor process perfomance using dumpsys and top.
