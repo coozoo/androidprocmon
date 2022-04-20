@@ -39,7 +39,7 @@ jobs:
         config:
           - os: ubuntu-18.04
           - os: macos-latest
-          - os: windows-2022
+          - os: windows-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -66,13 +66,13 @@ jobs:
           mkdir -p appdir/usr/bin
           cp androidprocmon appdir/usr/bin/androidprocmon
           mkdir -p appdir/usr/share/icons/
-          cp diff.png appdir/usr/share/icons/
+          cp images/computer.png appdir/usr/share/icons/
           mkdir -p appdir/usr/share/applications/
           cp androidprocmon.desktop appdir/usr/share/applications/
           wget -c -nv "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage"
           chmod a+x linuxdeployqt-continuous-x86_64.AppImage
           ./linuxdeployqt-continuous-x86_64.AppImage appdir/usr/share/applications/*.desktop -appimage
-          cp ./Qt_JSON_diff*.AppImage ./Qt_JSON_diff.AppImage
+          cp ./Android*.AppImage ./Android_Process_Monitor.AppImage
           ls -l
       - name: Upload Release Asset Linux AppImage
         if: matrix.config.os == 'ubuntu-18.04'
@@ -82,8 +82,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./Qt_JSON_diff.AppImage
-          asset_name: Qt_JSON_diff-x86_64.AppImage
+          asset_path: ./Android_Process_Monitor.AppImage
+          asset_name: Android_Process_Monitor-x86_64.AppImage
           asset_content_type: application/octet-stream
       - name: get app version
         if: matrix.config.os == 'macos-latest'
@@ -121,7 +121,7 @@ jobs:
           asset_name: androidprocmon_${{ steps.buildosx.outputs.VER_TAG_NAME }}.zip
           asset_content_type: application/zip
       - name: Setup MSYS2 env
-        if: matrix.config.os == 'windows-2022'
+        if: matrix.config.os == 'windows-latest'
         uses: msys2/setup-msys2@v2
         with:
           # Variant of the environment to set by default: MSYS, MINGW32 or MINGW64
@@ -151,13 +151,13 @@ jobs:
             openssl-devel
           shell: msys2 {0}
       - name: get app version
-        if: matrix.config.os == 'windows-2022'
+        if: matrix.config.os == 'windows-latest'
         run: |
           echo "::set-output name=VER_TAG_NAME::$(cat main.cpp |grep 'const QString APP'|awk -F\" '{print $2;}')"
         shell: msys2 {0}
         id: buildwin
       - name: make 64 win app
-        if: matrix.config.os == 'windows-2022'
+        if: matrix.config.os == 'windows-latest'
         run: |
           ls -l
           pwd
@@ -175,7 +175,7 @@ jobs:
           ls -l
         shell: msys2 {0}
       - name: make 32 win app
-        if: matrix.config.os == 'windows-2022'
+        if: matrix.config.os == 'windows-latest'
         run: |
           set MSYSTEM=MINGW32
           ROOTMSYS=/d/a/_temp/msys64/mingw32
@@ -189,7 +189,7 @@ jobs:
           mv release androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN32; 7z -tzip a androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN32.zip ./androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN32/
         shell: msys2 {0}
       - name: Upload Release Asset Win64
-        if: matrix.config.os == 'windows-2022'
+        if: matrix.config.os == 'windows-latest'
         id: upload-release-asset-win64
         uses: actions/upload-release-asset@v1
         env:
@@ -200,7 +200,7 @@ jobs:
           asset_name: androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN64.zip
           asset_content_type: application/zip
       - name: Upload Release Asset Win32
-        if: matrix.config.os == 'windows-2022'
+        if: matrix.config.os == 'windows-latest'
         id: upload-release-asset-win32
         uses: actions/upload-release-asset@v1
         env:
