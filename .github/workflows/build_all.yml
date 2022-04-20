@@ -169,7 +169,7 @@ jobs:
           rm -f release/*.o; rm -f release/*.cpp; rm -f release/*.h
           windeployqt.exe --no-translations release/androidprocmon.exe
           cp $ROOTMSYS/bin/zlib*.dll release/; cp $ROOTMSYS/bin/libgcc*.dll release/; cp $ROOTMSYS/bin/libwinpthread*.dll release/; cp $ROOTMSYS/bin/libstdc*.dll release/; cp $ROOTMSYS/bin/libdouble*.dll release/; cp $ROOTMSYS/bin/libicuin6*.dll release/; cp $ROOTMSYS/bin/libicuuc6*.dll release/; cp $ROOTMSYS/bin/libicudt6*.dll release/; cp $ROOTMSYS/bin/libpcre*.dll release/; cp $ROOTMSYS/bin/libzstd*.dll release/; cp $ROOTMSYS/bin/libharfbuzz*.dll release/; cp $ROOTMSYS/bin/libgraphite*.dll release/; cp $ROOTMSYS/bin/libfreetype*.dll release/; cp $ROOTMSYS/bin/libbrotlidec*.dll release/; cp $ROOTMSYS/bin/libbrotlicommon*.dll release/; cp $ROOTMSYS/bin/libbz*.dll release/; cp $ROOTMSYS/bin/libpng*.dll release/; cp $ROOTMSYS/bin/libglib*.dll release/; cp $ROOTMSYS/bin/libintl*.dll release/; cp $ROOTMSYS/bin/libiconv*.dll release/; cp $ROOTMSYS/bin/libpcre*.dll release/
-          cp $ROOTMSYS/bin/libcrypto*.dll release/; cp $ROOTMSYS/bin/libssl*.dll release/
+          cp $ROOTMSYS/bin/libcrypto*.dll release/; cp $ROOTMSYS/bin/libssl*.dll release/; cp $ROOTMSYS/bin/libmd4c.dll release/
           mv release androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN64; 7z -tzip a androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN64.zip ./androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN64/
           make clean
           ls -l
@@ -185,7 +185,7 @@ jobs:
           rm -f release/*.o; rm -f release/*.cpp; rm -f release/*.h;
           windeployqt.exe --no-translations release/androidprocmon.exe
           cp $ROOTMSYS/bin/zlib*.dll release/; cp $ROOTMSYS/bin/libgcc*.dll release/; cp $ROOTMSYS/bin/libwinpthread*.dll release/; cp $ROOTMSYS/bin/libstdc*.dll release/; cp $ROOTMSYS/bin/libdouble*.dll release/; cp $ROOTMSYS/bin/libicuin6*.dll release/; cp $ROOTMSYS/bin/libicuuc6*.dll release/; cp $ROOTMSYS/bin/libicudt6*.dll release/; cp $ROOTMSYS/bin/libpcre*.dll release/; cp $ROOTMSYS/bin/libzstd*.dll release/; cp $ROOTMSYS/bin/libharfbuzz*.dll release/; cp $ROOTMSYS/bin/libgraphite*.dll release/; cp $ROOTMSYS/bin/libfreetype*.dll release/; cp $ROOTMSYS/bin/libbrotlidec*.dll release/; cp $ROOTMSYS/bin/libbrotlicommon*.dll release/; cp $ROOTMSYS/bin/libbz*.dll release/; cp $ROOTMSYS/bin/libpng*.dll release/; cp $ROOTMSYS/bin/libglib*.dll release/; cp $ROOTMSYS/bin/libintl*.dll release/; cp $ROOTMSYS/bin/libiconv*.dll release/; cp $ROOTMSYS/bin/libpcre*.dll release/;
-          cp $ROOTMSYS/bin/libcrypto*.dll release/; cp $ROOTMSYS/bin/libssl*.dll release/
+          cp $ROOTMSYS/bin/libcrypto*.dll release/; cp $ROOTMSYS/bin/libssl*.dll release/; cp $ROOTMSYS/bin/libmd4c.dll release/
           mv release androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN32; 7z -tzip a androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN32.zip ./androidprocmon_${{ steps.buildwin.outputs.VER_TAG_NAME }}_WIN32/
         shell: msys2 {0}
       - name: Upload Release Asset Win64
