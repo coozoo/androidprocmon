@@ -81,7 +81,7 @@ So it's very good when you need to test your application on android device and m
 %endif
 %if 0%{?mageia} || 0%{?suse_version} || 0%{?sle_version} || 0%{?mdkversion}
     %qmake5_install
-    %suse_update_desktop_file -G "QT RF Power Meter" -r qtrfpowermeter Development
+    %suse_update_desktop_file -G "Android Process Monitor" -r androidprocmon Development
 %endif
 
 %post
