@@ -5,15 +5,17 @@ QT_DIR="$QT_DIR""$(ls $QT_DIR)"
 QMAKE=$QT_DIR/bin/qmake
 MAC_DEPLOY_TOOL=$QT_DIR/bin/macdeployqt
 
-BIN_DIR=./build-androidprocmon-Release/
-APP_NAME=androidprocmon
+appget="$(cat *.pro |grep 'TARGET ='|awk -F\= '{print $2;}'| tr -d ' ')"
+
+BIN_DIR="./build-$appget-Release/"
+APP_NAME=$appget
 BUNDLE_NAME=$APP_NAME.app
-VOL_NAME="androidprocmon"
+VOL_NAME="$appget"
 
 #DMG_DIR=${APP_NAME}_dmg
 #DMG_PATH=./$APP_NAME.dmg
 
-PROJECT_FILE=androidprocmon.pro
+PROJECT_FILE=$(basename -- "*.pro")
 
 main(){
     cd "${0/*}";

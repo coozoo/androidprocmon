@@ -9,7 +9,8 @@ QT       += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 TARGET = androidprocmon
-TRANSLATIONS = androidprocmon_en.ts androidprocmon_uk_UA.ts
+
+TRANSLATIONS = ./translations/$${TARGET}_en_US.ts ./translations/$${TARGET}_uk_UA.ts
 CODECFORSRC = UTF-8
 TEMPLATE = app
 
@@ -52,10 +53,10 @@ DISTFILES +=
 
 binary.files += $$TARGET
 binary.path = /usr/bin
-translations.files += $$files(.qm/*.qm,true)
+translations.files += ./translations/$$files(.qm/*.qm,true)
 translations.path = /usr/share/$$TARGET
 icon.files += images/computer.png
 icon.path += /usr/share/icons
-desktop.files += androidprocmon.desktop
+desktop.files += $${TARGET}.desktop
 desktop.path += /usr/share/applications/
 INSTALLS += binary translations icon desktop
