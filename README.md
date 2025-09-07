@@ -5,11 +5,12 @@ It's a tool that allow monitoring of android application with logging possibilit
 
 <img width="1920" height="1054" alt="image" src="https://github.com/user-attachments/assets/b9ac314f-1484-4dc2-a971-0077368bc856" />
 
-<img width="1920" height="1055" alt="image" src="https://github.com/user-attachments/assets/238535bc-cb44-449f-b4d2-9d08d8d2d342" />
 
 ## Installation
 
 Precompiled RPMs (Fedora,RHEL etc) can be found in COPR click below:
+
+[<img src="https://copr.fedorainfracloud.org/coprs/yura/androidprocmon/package/androidprocmon/status_image/last_build.png"></img>](https://copr.fedorainfracloud.org/coprs/yura/androidprocmon/)
 
 ```
 $ sudo dnf copr enable yura/androidprocmon
@@ -29,6 +30,7 @@ You can get precompiled package for other OS here:
 https://github.com/coozoo/androidprocmon/releases
 
 [![Build Status](https://travis-ci.com/coozoo/androidprocmon.svg?branch=master)](https://travis-ci.com/coozoo/androidprocmon)
+
 
 If you prefer to compile it by yourself then see below. 
 
