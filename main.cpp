@@ -9,7 +9,7 @@
 #include <QDateTime>
 #include <QLoggingCategory>
 
-const QString APP_VERSION = "0.8.3b";
+const QString APP_VERSION = "0.90";
 
 void qtLogger(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
