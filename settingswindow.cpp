@@ -7,7 +7,9 @@ SettingsWindow::SettingsWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     connect(this,&SettingsWindow::accepted,this,&SettingsWindow::settingsSave);
-
+    ui->statsdir_label->setVisible(false);
+    ui->statsdir_lineEdit->setVisible(false);
+    ui->statsdir_toolButton->setVisible(false);
     if(s.contains("adbPath"))
     {
         ui->enableCustomadb_checkBox->click();
