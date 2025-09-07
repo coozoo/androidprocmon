@@ -209,7 +209,7 @@ void chartRealTime::setPlotTitle(QString plotTitle)
  */
 void chartRealTime::on_datacoming(QDateTime dateTime, QList<double> data)
 {
-    Q_UNUSED(dateTime)
+    Q_UNUSED(dateTime);
     //if bool flag to reset timer is raised
     if(timeReset==true)
     {
