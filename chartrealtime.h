@@ -7,6 +7,7 @@
 #include <QObject>
 #include <QWidget>
 #include <QTimer>
+#include <QElapsedTimer>
 #include <QDockWidget>
 #include <QColor>
 #include <limits>
@@ -25,6 +26,11 @@ class chartRealTime : public QMainWindow
            READ getRange
            WRITE setRange
         )
+    //range how much data range on chart
+    Q_PROPERTY(bool isflow
+           READ getisflow
+           WRITE setisflow
+        )
 public:
     explicit chartRealTime(QMainWindow *parent = 0);
     ~chartRealTime();
@@ -32,7 +38,7 @@ public:
     void setupRealtimeDataDemo(QCustomPlot *customPlot);
     QCustomPlot *customPlot;
     QDockWidget *chart_dockwidget;
-    void dataSlot(QDateTime dateTime, QList<int> data);
+    void dataSlot(QDateTime dateTime, QList<double> data);
     void addGraphs(QStringList graphs);
     void setYAxisLabel(QString yAxisLabel);
     void setPlotTitle(QString plotTitle);
@@ -59,33 +65,53 @@ public:
     int getRange() const
     { return range; }
 
+    void setisflow(int m_isflow)
+    {
+        isflow = m_isflow;
+        emit on_setisflow();
+    }
+    int getisflow() const
+    { return isflow; }
+
 
 private:
   QString demoName;
-  QTimer dataTimer;
   QString windowTitle;
-  QTime time;
+  QTimer dataTimer;
+  QElapsedTimer timer;
   int range;
+  bool isflow;
   bool timeReset;
 
+  QCPItemStraightLine *cursorLine = nullptr;
+  QCPItemText *cursorLabel = nullptr;
+  QList<QCPItemTracer*> tracers;
+
+  qint64 lastTracerTime = -1;
+
 signals:
-  void datacoming(QDateTime dateTime, QList<int> data);
+  void datacoming(QDateTime dateTime, QList<double> data);
   void dockLocationChanged(bool state);
+  void tracerTimeChanged(qint64 time);
+  void tracerIndexChanged(int foundDataIndex);
 
 public slots:
   void reset();
+  void showTracerAtTime(qint64 time);
+  void showTracerAtIndex(int index);
 
 private slots:
   //void realtimeDataSlot();
   void on_setWindowTitle();
-  void on_datacoming(QDateTime dateTime, QList<int> data);
+  void on_datacoming(QDateTime dateTime, QList<double> data);
   void on_visibilityChanged(bool);
   void showPointToolTip(QMouseEvent *event);
   void on_dockLocationChanged(bool state);
   void on_setRange();
+  void on_setisflow();
 
 protected:
-     bool eventFilter(QObject* obj, QEvent *event);
+     bool eventFilter(QObject* obj, QEvent *event) override;
 
 };
 

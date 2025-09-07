@@ -36,7 +36,7 @@ public:
     //all created charts list
     QList<chartRealTime*> listCharts;
 
-    int getValueByHeader(QString header, QString headersString, QString dataString);
+    double getValueByHeader(QString header, QString headersString, QString dataString);
     void saveAllCharts(QString imagePath, QString imageType, int width, int height);
 
     void setjsonChartRuleObject(QString m_jsonChartRuleObject)
@@ -66,9 +66,11 @@ public slots:
     void on_jsonChartRuleObjectChanged();
     void resetAllCharts();
     void setAllRanges(int range);
+    void setisflow(bool flow);
+    void connectTracers();
 
 protected:
-     bool eventFilter(QObject* obj, QEvent *event);
+     bool eventFilter(QObject* obj, QEvent *event) override;
 
 };
 

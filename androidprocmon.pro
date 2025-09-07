@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui charts printsupport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
@@ -14,24 +14,28 @@ TRANSLATIONS = ./translations/$${TARGET}_en_US.ts ./translations/$${TARGET}_uk_U
 CODECFORSRC = UTF-8
 TEMPLATE = app
 
-CONFIG += c++11
+CONFIG += c++17
 CONFIG += lrelease
 
-SOURCES += main.cpp\
-        mainwindow.cpp \
+INCLUDEPATH += $$PWD/3rdparty/qcustomplot
+
+SOURCES += \
+    3rdparty/qcustomplot/qcustomplot.cpp \
+    main.cpp\
+    mainwindow.cpp \
     adbviewer.cpp \
     qplaintexteditcursor.cpp \
-    qcustomplot.cpp \
     chartmanager.cpp \
     chartrealtime.cpp \
     maincontainer.cpp \
     adbexecute.cpp \
     settingswindow.cpp
 
-HEADERS  += mainwindow.h \
+HEADERS  += \
+    3rdparty/qcustomplot/qcustomplot.h \
+    mainwindow.h \
     adbviewer.h \
     qplaintexteditcursor.h \
-    qcustomplot.h \
     chartmanager.h \
     chartrealtime.h \
     maincontainer.h \
@@ -53,10 +57,10 @@ DISTFILES +=
 
 binary.files += $$TARGET
 binary.path = /usr/bin
-translations.files += ./translations/$$files(.qm/*.qm,true)
+translations.files += ./translations/$$files(*.qm/*.qm,true)
 translations.path = /usr/share/$$TARGET
 icon.files += images/computer.png
-icon.path += /usr/share/icons
+icon.path += /usr/share/icons/hicolor/scalable/apps
 desktop.files += $${TARGET}.desktop
 desktop.path += /usr/share/applications/
 INSTALLS += binary translations icon desktop

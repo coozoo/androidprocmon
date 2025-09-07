@@ -20,7 +20,6 @@
 #include <QHBoxLayout>
 #include <QGridLayout>
 #include <QProcess>
-#include <QRegExp>
 #include <QRegularExpression>
 #include <QPlainTextEdit>
 #include <QLineEdit>

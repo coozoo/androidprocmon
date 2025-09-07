@@ -24,6 +24,7 @@
 #include <QTextStream>
 #include <QStandardPaths>
 #include <QDir>
+#include <algorithm>
 #include "qplaintexteditcursor.h"
 
 class adbExecute : public QMainWindow
