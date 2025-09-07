@@ -1,13 +1,24 @@
 #!/bin/bash
 
-QT_DIR=/usr/local/Cellar/qt@5/
-QT_DIR="$QT_DIR""$(ls $QT_DIR)"
+sw_vers
+
+QT_DIR=$(brew --prefix qt)
 QMAKE=$QT_DIR/bin/qmake
 MAC_DEPLOY_TOOL=$QT_DIR/bin/macdeployqt
 
-appget="$(cat *.pro |grep 'TARGET ='|awk -F\= '{print $2;}'| tr -d ' ')"
+if [ ! -x "$QMAKE" ]; then
+    echo "qmake not found at $QMAKE. Make sure you have installed Qt6 with Homebrew."
+    exit 1
+fi
 
-BIN_DIR="./build-$appget-Release/"
+if [ ! -x "$MAC_DEPLOY_TOOL" ]; then
+    echo "macdeployqt not found at $MAC_DEPLOY_TOOL. Make sure you have installed Qt6 with Homebrew."
+    exit 1
+fi
+
+appget="$(cat *.pro |grep '^TARGET ='|awk -F\= '{print $2;}'| tr -d ' ')"
+
+# BIN_DIR="./build-$appget-Release/"
 APP_NAME=$appget
 BUNDLE_NAME=$APP_NAME.app
 VOL_NAME="$appget"
@@ -63,7 +74,7 @@ compileProject(){
         return $RESULT
     fi
 
-    make CXX="g++"
+    make CXX="clang"
     RESULT=$?
     if [ $RESULT -ne 0 ] ; then
         echo make failed, error code $RESULT
@@ -76,20 +87,25 @@ compileProject(){
 
 prepareBundle(){
     CURRENT_DIR=$PWD
+    echo $CURRENT_DIR
     echo Preparing Bundle...
-    
-    cd $BIN_DIR
-    if [ ! -d $BUNDLE_NAME ]
+    ls -l
+    # cd $BIN_DIR
+    if [[ ! -d $BUNDLE_NAME ]]
     then
         echo "$BUNDLE_NAME bundle doesn't exist."
         return 1
     fi
+    ls -l
 
     
     # cd to Resources folder
     cd $BUNDLE_NAME
+    ls -l
     cd Contents
+    ls -l
     cd MacOS
+    ls -l
     # copy appconfig to resources  
     mkdir ./lang
     cp ../../../*.qm ./lang/
@@ -103,7 +119,7 @@ prepareBundle(){
     #cd Resources
 
     cd ../../../
-
+    ls -l
     # Add QtFramework libraries and required plugins into .app bundle. Update dependencies of binary files.
     $MAC_DEPLOY_TOOL $BUNDLE_NAME -verbose=3
 
@@ -132,6 +148,7 @@ prepareBundle(){
     fi
     
     echo Done.
+    otool -L $BUNDLE_NAME/Contents/MacOS/$APP_NAME
      
     return 0
 }

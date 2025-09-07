@@ -23,6 +23,24 @@ chartRealTime::chartRealTime(QMainWindow *parent) : QMainWindow(parent)
 //    main_gridlayout->addWidget(resetButton,1,0);
 //    connect(resetButton,SIGNAL(clicked()),this,SLOT(reset()));
 
+
+    // Add vertical cursor line and label
+    cursorLine = new QCPItemStraightLine(customPlot);
+    cursorLine->setPen(QPen(Qt::DashLine));
+    cursorLine->point1->setCoords(0, 0);
+    cursorLine->point2->setCoords(0, 1);
+
+    cursorLabel = new QCPItemText(customPlot);
+    cursorLabel->setPositionAlignment(Qt::AlignTop | Qt::AlignHCenter);
+    cursorLabel->setText("");
+    cursorLabel->setVisible(false);
+    cursorLabel->setPen(QPen(Qt::black));
+    cursorLabel->setBrush(QBrush(QColor(255,255,200,200)));
+    customPlot->addLayer("overlay", customPlot->layer("main"), QCustomPlot::limAbove);
+    cursorLabel->setLayer("overlay");
+    cursorLabel->setPositionAlignment(Qt::AlignLeft | Qt::AlignTop);
+    cursorLabel->setTextAlignment(Qt::AlignLeft);
+
     chart_dockwidget->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
 
     chart_dockwidget->setAllowedAreas(Qt::AllDockWidgetAreas);
@@ -55,12 +73,11 @@ chartRealTime::~chartRealTime()
  */
 void chartRealTime::on_dockLocationChanged(bool state)
 {
-    QTextStream cout(stdout);
     //if(chart_dockwidget->isFloating())
     //{
     //    chart_dockwidget->setFloating(true);
     //}
-    cout<<"pos changed: "<<state<<endl;
+    qDebug()<<"pos changed: "<<state;
 
     emit dockLocationChanged(state);
 
@@ -125,7 +142,7 @@ void chartRealTime::setupRealtimeDataDemo(QCustomPlot *customPlot)
     //show lable for mouse position
     connect(customPlot, SIGNAL(mouseMove(QMouseEvent*)), this,SLOT(showPointToolTip(QMouseEvent*)));
     // datacoming signal to the slot
-    connect(this,SIGNAL(datacoming(QDateTime,QList<int>)),this,SLOT(on_datacoming(QDateTime,QList<int>)));
+    connect(this,SIGNAL(datacoming(QDateTime,QList<double>)),this,SLOT(on_datacoming(QDateTime,QList<double>)));
 
 
 
@@ -190,20 +207,21 @@ void chartRealTime::setPlotTitle(QString plotTitle)
  * dateTime - not used currently (in future maybe will be posibility to use it, currently only internal chart timer)
  * data - values list should match with graph values amount
  */
-void chartRealTime::on_datacoming(QDateTime dateTime, QList<int> data)
+void chartRealTime::on_datacoming(QDateTime dateTime, QList<double> data)
 {
     Q_UNUSED(dateTime);
-    //static QTime time(QTime::currentTime());
     //if bool flag to reset timer is raised
     if(timeReset==true)
     {
-        time=QTime::currentTime();
+        timer.restart();
         timeReset=false;
     }
-    double key = time.elapsed()/1000.0;
+
+    double key = static_cast<double>(timer.elapsed())/1000.0;
+    qDebug()<<getisflow()<<key;
     //add each value to graph
-    int i=0;
-    foreach (int value, data)
+    double i=0;
+    foreach (double value, data)
         {
             customPlot->graph(i)->addData(key, value);
             if(customPlot->yAxis->range().upper<value)
@@ -216,8 +234,8 @@ void chartRealTime::on_datacoming(QDateTime dateTime, QList<int> data)
     //if more then range than "compress" it
     //later I want to add scroll type (flow like when old data moves to left side and lost when our of range)
     int currentRange=getRange();
-    if(key>=currentRange)
-        {
+    if(key>=currentRange && !getisflow())
+    {
             customPlot->xAxis->setRange(key, key, Qt::AlignRight);
         }
     else
@@ -235,7 +253,7 @@ void chartRealTime::on_datacoming(QDateTime dateTime, QList<int> data)
  * dateTime - not used currently (in future maybe will be posibility to use it, currently only internal chart timer)
  * data - values list should match with graph values amount
  */
-void chartRealTime::dataSlot(QDateTime dateTime, QList<int> data)
+void chartRealTime::dataSlot(QDateTime dateTime, QList<double> data)
 {
     emit datacoming(dateTime,data);
 }
@@ -248,7 +266,7 @@ void chartRealTime::dataSlot(QDateTime dateTime, QList<int> data)
 void chartRealTime::addGraphs(QStringList graphs)
 {
     //graphs.append("test");
-    qDebug()<<graphs<<endl;
+    qDebug()<<graphs;
     int i=0;
 
     foreach (QString str, graphs)
@@ -287,6 +305,16 @@ void chartRealTime::addGraphs(QStringList graphs)
 //                    customPlot->graph(i)->setBrush(QBrush(QColor(255,200,20,70)));
 //                }
             customPlot->graph(i)->setName(str);
+
+            QCPItemTracer* tracer = new QCPItemTracer(customPlot);
+            tracer->setStyle(QCPItemTracer::tsCircle);
+            tracer->setPen(QPen(uniColor[i % uniColor.count()], 2));
+            tracer->setBrush(Qt::yellow);
+            tracer->setSize(12);
+            tracer->setVisible(false);
+            tracer->setLayer("overlay");
+            tracers.append(tracer);
+
             i++;
         }
 
@@ -295,8 +323,7 @@ void chartRealTime::addGraphs(QStringList graphs)
 /* replot if chart become visible */
 void chartRealTime::on_visibilityChanged(bool)
 {
-    QTextStream cout(stdout);
-    cout<<"vis changed"<<endl;
+    qDebug()<<"vis changed";
     if(customPlot->isVisible())
     {
     customPlot->replot();
@@ -308,17 +335,148 @@ void chartRealTime::on_visibilityChanged(bool)
 void chartRealTime::showPointToolTip(QMouseEvent *event)
 {
 
-    //int x = customPlot->xAxis->pixelToCoord(event->pos().x());
-    int y = customPlot->yAxis->pixelToCoord(event->pos().y());
+    // //int x = customPlot->xAxis->pixelToCoord(event->pos().x());
+    // int y = customPlot->yAxis->pixelToCoord(event->pos().y());
 
-    //customPlot->setToolTip(QString("%1 , %2").arg(x).arg(y));
-    customPlot->setToolTip(QString("%1").arg(y));
+    // //customPlot->setToolTip(QString("%1 , %2").arg(x).arg(y));
+    // customPlot->setToolTip(QString("%1").arg(y));
+
+    QRect plotRect = customPlot->axisRect()->rect();
+    QPoint mousePos = event->pos();
+
+    QPoint labelOffset(-110, -50);
+    int labelWidth = 120;
+    int labelHeight = 40;
+    if (mousePos.x() - labelWidth < plotRect.left())
+        labelOffset.setX(40);
+    if (mousePos.y() - labelHeight < plotRect.top())
+        labelOffset.setY(20);
+
+    QPoint labelPixelPos = mousePos + labelOffset;
+    double labelX = customPlot->xAxis->pixelToCoord(labelPixelPos.x());
+    double labelY = customPlot->yAxis->pixelToCoord(labelPixelPos.y());
+
+    double mouseX = customPlot->xAxis->pixelToCoord(event->pos().x());
+    cursorLine->point1->setCoords(mouseX, 0);
+    cursorLine->point2->setCoords(mouseX, 1);
+
+    QString xLabel = customPlot->xAxis->label();
+
+    // We'll track the nearest dot of the first graph with data for the label's time
+    double traceTime = 0;
+    bool foundTraceTime = false;
+    QString labelText;
+
+    int tracerIndex = 0;
+    bool anyData = false;
+
+    // Track index of the closest data point for the first graph with data
+    static int lastDataIndex = -1;
+    int foundDataIndex = -1;
+
+    for (int i = 0; i < customPlot->graphCount(); ++i)
+    {
+        QCPGraph *graph = customPlot->graph(i);
+        double minDist = std::numeric_limits<double>::max();
+        double nearestX = 0, nearestY = 0;
+        bool foundData = false;
+        int nearestIndex = -1, idx = 0;
+
+        if (graph && graph->data()->size() > 0)
+        {
+            for (auto it = graph->data()->constBegin(); it != graph->data()->constEnd(); ++it, ++idx)
+            {
+                double dist = std::abs(it->key - mouseX);
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                    nearestX = it->key;
+                    nearestY = it->value;
+                    foundData = true;
+                    nearestIndex = idx;
+                }
+            }
+
+            if (foundData) {
+                anyData = true;
+                // Record time and index for label from the first graph with data
+                if (!foundTraceTime) {
+                    traceTime = nearestX;
+                    foundTraceTime = true;
+                    foundDataIndex = nearestIndex;
+                }
+                // Show a tracer for each graph
+                if (tracers.size() > tracerIndex && tracers[tracerIndex]) {
+                    tracers[tracerIndex]->setGraph(graph);
+                    tracers[tracerIndex]->setGraphKey(nearestX);
+                    tracers[tracerIndex]->setInterpolating(false);
+                    tracers[tracerIndex]->setVisible(true);
+                }
+                labelText += QString("%1: %2\n")
+                                 .arg(graph->name().isEmpty() ? QString("Graph %1").arg(i + 1) : graph->name())
+                                 .arg(QString::number(nearestY, 'g', 6));
+            } else {
+                if (tracers.size() > tracerIndex && tracers[tracerIndex])
+                    tracers[tracerIndex]->setVisible(false);
+                labelText += QString("%1: ---\n")
+                                 .arg(graph->name().isEmpty() ? QString("Graph %1").arg(i + 1) : graph->name());
+            }
+        }
+        else
+        {
+            if (tracers.size() > tracerIndex && tracers[tracerIndex])
+                tracers[tracerIndex]->setVisible(false);
+            labelText += QString("%1: ---\n")
+                             .arg(graph->name().isEmpty() ? QString("Graph %1").arg(i + 1) : graph->name());
+        }
+        tracerIndex++;
+    }
+
+    // Set time in label to the time of actual dot, not mouse
+    QString timeStr;
+    if (xLabel.toLower().contains("time") || xLabel.toLower().contains("date"))
+        timeStr = QDateTime::fromMSecsSinceEpoch((qint64)traceTime).toString("yyyy-MM-dd HH:mm:ss");
+    else
+        timeStr = QString::number(traceTime, 'f', 2);
+
+    QString header = QString("%1: %2\n").arg(xLabel.isEmpty() ? "Time" : xLabel).arg(timeStr);
+    labelText = header + labelText;
+
+    // Only use cursorLabel if it exists!
+    if (cursorLabel) {
+        cursorLabel->setText(labelText.trimmed());
+        cursorLabel->setVisible(anyData);
+        cursorLabel->setPositionAlignment(Qt::AlignLeft | Qt::AlignTop);
+        cursorLabel->setTextAlignment(Qt::AlignLeft);
+        if (anyData)
+            cursorLabel->position->setCoords(labelX, labelY);
+    }
+
+    // Only emit signal when the data point index actually changes
+    if (foundTraceTime && foundDataIndex != -1 && foundDataIndex != lastDataIndex) {
+        emit tracerTimeChanged((qint64)traceTime);
+        emit tracerIndexChanged(foundDataIndex);
+        lastDataIndex = foundDataIndex;
+        qDebug()<<"tracer datapoint changed index:"<<foundDataIndex<<" time:"<<traceTime;
+    }
+
+    customPlot->replot();
+
 
 }
 
+
 void chartRealTime::on_setRange()
 {
+    qDebug()<<"on_setRange"<<getRange();
     //something to handle  range change (need something really smart to make it work smoothly :) )
+
+}
+
+void chartRealTime::on_setisflow()
+{
+    qDebug()<<"on_setisflow"<<getisflow();
+    //something to handle  flow change
 
 }
 
@@ -331,7 +489,7 @@ void chartRealTime::on_setRange()
 void chartRealTime::saveImage(QString imagePath, QString imageType, int width,int height)
 {
     //replace charachters which posibly incorrect for filename in chart name with underscore
-    QString chartname=chart_dockwidget->windowTitle()+"_"+QString::number(time.elapsed(),'g',10);
+    QString chartname=chart_dockwidget->windowTitle()+"_"+QString::number(static_cast<double>(timer.elapsed()),'g',10);
     QStringList forbidCharachters={" ","<",">",":","\"","/","\\","|","&","*","@","#","$","%","^","\"","+","=","`"};
     foreach(QString stringtoreplace, forbidCharachters)
     {
@@ -357,12 +515,278 @@ void chartRealTime::saveImage(QString imagePath, QString imageType, int width,in
 
 bool chartRealTime::eventFilter(QObject* obj, QEvent *event)
 {
-    QTextStream cout(stdout);
+    Q_UNUSED(obj)
     if (event->type() == QEvent::MouseMove)
       {
         QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
-        cout<<QString("Chart dock mouse move (%1,%2)").arg(mouseEvent->pos().x()).arg(mouseEvent->pos().y())<<endl;
+        qDebug()<<QString("Chart dock mouse move (%1,%2)").arg(mouseEvent->pos().x()).arg(mouseEvent->pos().y());
       }
       return false;
 }
 
+
+// void chartRealTime::showTracerAtTime(qint64 time)
+// {
+//     // Find nearest dot to time on each graph
+//     int tracerIndex = 0;
+//     double labelX = 0, labelY = 0;
+//     bool found = false;
+//     QString labelText;
+//     QString xLabel = customPlot->xAxis->label();
+
+//     for (int i = 0; i < customPlot->graphCount(); ++i)
+//     {
+//         QCPGraph *graph = customPlot->graph(i);
+//         double minDist = std::numeric_limits<double>::max();
+//         double nearestX = 0, nearestY = 0;
+//         bool foundData = false;
+//         if (graph && graph->data()->size() > 0)
+//         {
+//             for (auto it = graph->data()->constBegin(); it != graph->data()->constEnd(); ++it)
+//             {
+//                 double dist = std::abs(it->key - time);
+//                 if (dist < minDist)
+//                 {
+//                     minDist = dist;
+//                     nearestX = it->key;
+//                     nearestY = it->value;
+//                     foundData = true;
+//                 }
+//             }
+//             if (foundData && tracers.size() > tracerIndex && tracers[tracerIndex]) {
+//                 tracers[tracerIndex]->setGraph(graph);
+//                 tracers[tracerIndex]->setGraphKey(nearestX);
+//                 tracers[tracerIndex]->setInterpolating(false);
+//                 tracers[tracerIndex]->setVisible(true);
+//                 if (!found) {
+//                     labelX = nearestX;
+//                     labelY = nearestY;
+//                     found = true;
+//                 }
+//                 labelText += QString("%1: %2\n")
+//                                  .arg(graph->name().isEmpty() ? QString("Graph %1").arg(i + 1) : graph->name())
+//                                  .arg(QString::number(nearestY, 'g', 6));
+//             }
+//             else if (tracers.size() > tracerIndex && tracers[tracerIndex]) {
+//                 tracers[tracerIndex]->setVisible(false);
+//                 labelText += QString("%1: ---\n")
+//                                  .arg(graph->name().isEmpty() ? QString("Graph %1").arg(i + 1) : graph->name());
+//             }
+//         }
+//         tracerIndex++;
+//     }
+//     // Show label beside tracer dot
+//     if (cursorLabel && found) {
+//         QString timeStr;
+//         if (xLabel.toLower().contains("time") || xLabel.toLower().contains("date"))
+//             timeStr = QDateTime::fromMSecsSinceEpoch((qint64)labelX).toString("yyyy-MM-dd HH:mm:ss");
+//         else
+//             timeStr = QString::number(labelX, 'f', 2);
+//         QString header = QString("%1: %2\n").arg(xLabel.isEmpty() ? "Time" : xLabel).arg(timeStr);
+//         labelText = header + labelText;
+//         cursorLabel->setText(labelText.trimmed());
+//         cursorLabel->setVisible(true);
+//         cursorLabel->setPositionAlignment(Qt::AlignLeft | Qt::AlignTop);
+//         cursorLabel->setTextAlignment(Qt::AlignLeft);
+//         cursorLabel->position->setCoords(labelX, labelY);
+//     } else if (cursorLabel) {
+//         cursorLabel->setVisible(false);
+//     }
+//     customPlot->replot();
+// }
+
+//usually shows a bit off
+void chartRealTime::showTracerAtTime(qint64 time)
+{
+    int tracerIndex = 0;
+    double labelX = 0, labelY = 0;
+    bool found = false;
+    QString labelText;
+    QString xLabel = customPlot->xAxis->label();
+
+    // Track index of the nearest data point per graph
+    QVector<int> nearestIndices;
+
+    for (int i = 0; i < customPlot->graphCount(); ++i)
+    {
+        QCPGraph *graph = customPlot->graph(i);
+        double minDist = std::numeric_limits<double>::max();
+        double nearestX = 0, nearestY = 0;
+        bool foundData = false;
+        int nearestIndex = -1, idx = 0;
+
+        if (graph && graph->data()->size() > 0)
+        {
+            for (auto it = graph->data()->constBegin(); it != graph->data()->constEnd(); ++it, ++idx)
+            {
+                double dist = std::abs(it->key - time);
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                    nearestX = it->key;
+                    nearestY = it->value;
+                    foundData = true;
+                    nearestIndex = idx;
+                }
+            }
+            nearestIndices.append(nearestIndex);
+
+            if (foundData && tracers.size() > tracerIndex && tracers[tracerIndex]) {
+                tracers[tracerIndex]->setGraph(graph);
+                tracers[tracerIndex]->setGraphKey(nearestX);
+                tracers[tracerIndex]->setInterpolating(false);
+                tracers[tracerIndex]->setVisible(true);
+                if (!found) {
+                    labelX = nearestX;
+                    labelY = nearestY;
+                    found = true;
+                }
+                labelText += QString("%1: %2 (idx %3)\n")
+                                 .arg(graph->name().isEmpty() ? QString("Graph %1").arg(i + 1) : graph->name())
+                                 .arg(QString::number(nearestY, 'g', 6))
+                                 .arg(nearestIndex);
+            }
+            else if (tracers.size() > tracerIndex && tracers[tracerIndex]) {
+                tracers[tracerIndex]->setVisible(false);
+                labelText += QString("%1: ---\n")
+                                 .arg(graph->name().isEmpty() ? QString("Graph %1").arg(i + 1) : graph->name());
+            }
+        } else {
+            nearestIndices.append(-1); // No data available for this graph
+            if (tracers.size() > tracerIndex && tracers[tracerIndex])
+                tracers[tracerIndex]->setVisible(false);
+            labelText += QString("%1: ---\n")
+                             .arg(graph->name().isEmpty() ? QString("Graph %1").arg(i + 1) : graph->name());
+        }
+        tracerIndex++;
+    }
+
+    // Show label beside tracer dot with offset and edge checking
+    if (cursorLabel && found) {
+        QString timeStr;
+        if (xLabel.toLower().contains("time") || xLabel.toLower().contains("date"))
+            timeStr = QDateTime::fromMSecsSinceEpoch((qint64)labelX).toString("yyyy-MM-dd HH:mm:ss");
+        else
+            timeStr = QString::number(labelX, 'f', 2);
+        QString header = QString("%1: %2\n").arg(xLabel.isEmpty() ? "Time" : xLabel).arg(timeStr);
+        labelText = header + labelText;
+        cursorLabel->setText(labelText.trimmed());
+        cursorLabel->setVisible(true);
+        cursorLabel->setPositionAlignment(Qt::AlignLeft | Qt::AlignTop);
+        cursorLabel->setTextAlignment(Qt::AlignLeft);
+
+        // Offset logic: get pixel coordinates for tracer dot
+        QRect plotRect = customPlot->axisRect()->rect();
+        int tracerPixelX = customPlot->xAxis->coordToPixel(labelX);
+        int tracerPixelY = customPlot->yAxis->coordToPixel(labelY);
+
+        QPoint labelOffset(-110, -50); // Same as your mouse offset
+        int labelWidth = 120;
+        int labelHeight = 40;
+        if (tracerPixelX - labelWidth < plotRect.left())
+            labelOffset.setX(40);
+        if (tracerPixelY - labelHeight < plotRect.top())
+            labelOffset.setY(20);
+
+        QPoint labelPixelPos = QPoint(tracerPixelX, tracerPixelY) + labelOffset;
+        double labelCoordX = customPlot->xAxis->pixelToCoord(labelPixelPos.x());
+        double labelCoordY = customPlot->yAxis->pixelToCoord(labelPixelPos.y());
+
+        cursorLabel->position->setCoords(labelCoordX, labelCoordY);
+    } else if (cursorLabel) {
+        cursorLabel->setVisible(false);
+    }
+
+    // Optionally: emit a signal with nearestIndices (e.g., for sync)
+    // emit tracerIndicesChanged(nearestIndices); // You need to declare this signal if you want to use it
+
+    customPlot->replot();
+}
+
+
+void chartRealTime::showTracerAtIndex(int index)
+{
+    qDebug()<<"showTracerAtIndex"<<index;
+    if (customPlot->graphCount() == 0) return;
+
+    QString labelText;
+    QString xLabel = customPlot->xAxis->label();
+    QString timeStr;
+    double labelX = 0, labelY = 0;
+    bool foundFirst = false;
+
+    for (int i = 0; i < customPlot->graphCount(); ++i)
+    {
+        QCPGraph *graph = customPlot->graph(i);
+        if (!graph || graph->data()->size() == 0 || index < 0 || index >= graph->data()->size()) {
+            // Hide tracer if no data
+            if (tracers.size() > i && tracers[i])
+                tracers[i]->setVisible(false);
+            labelText += QString("%1: ---\n")
+                             .arg(graph->name().isEmpty() ? QString("Graph %1").arg(i + 1) : graph->name());
+            continue;
+        }
+
+        auto it = graph->data()->constBegin();
+        std::advance(it, index);
+
+        double x = it->key;
+        double y = it->value;
+
+        // For header (use first graph's time)
+        if (!foundFirst) {
+            if (xLabel.toLower().contains("time") || xLabel.toLower().contains("date"))
+                timeStr = QDateTime::fromMSecsSinceEpoch((qint64)x).toString("yyyy-MM-dd HH:mm:ss");
+            else
+                timeStr = QString::number(x, 'f', 2);
+            labelX = x;
+            labelY = y;
+            foundFirst = true;
+        }
+
+        // Set tracer
+        if (tracers.size() > i && tracers[i]) {
+            tracers[i]->setGraph(graph);
+            tracers[i]->setGraphKey(x);
+            tracers[i]->setInterpolating(false);
+            tracers[i]->setVisible(true);
+        }
+
+        // Format label for each graph (matches mouse function)
+        labelText += QString("%1: %2\n")
+                         .arg(graph->name().isEmpty() ? QString("Graph %1").arg(i + 1) : graph->name())
+                         .arg(QString::number(y, 'g', 6));
+    }
+
+    // Add header with time
+    if (cursorLabel && foundFirst) {
+        QString header = QString("%1: %2\n").arg(xLabel.isEmpty() ? "Time" : xLabel).arg(timeStr);
+        cursorLabel->setText(header + labelText.trimmed());
+        cursorLabel->setVisible(true);
+        cursorLabel->setPositionAlignment(Qt::AlignLeft | Qt::AlignTop);
+        cursorLabel->setTextAlignment(Qt::AlignLeft);
+
+        // Offset logic
+        QRect plotRect = customPlot->axisRect()->rect();
+        int tracerPixelX = customPlot->xAxis->coordToPixel(labelX);
+        int tracerPixelY = customPlot->yAxis->coordToPixel(labelY);
+
+        QPoint labelOffset(-110, -50);
+        int labelWidth = 120;
+        int labelHeight = 40;
+        if (tracerPixelX - labelWidth < plotRect.left())
+            labelOffset.setX(40);
+        if (tracerPixelY - labelHeight < plotRect.top())
+            labelOffset.setY(20);
+
+        QPoint labelPixelPos = QPoint(tracerPixelX, tracerPixelY) + labelOffset;
+        double labelCoordX = customPlot->xAxis->pixelToCoord(labelPixelPos.x());
+        double labelCoordY = customPlot->yAxis->pixelToCoord(labelPixelPos.y());
+
+        cursorLabel->position->setCoords(labelCoordX, labelCoordY);
+    } else if (cursorLabel) {
+        cursorLabel->setVisible(false);
+    }
+
+    customPlot->replot();
+}

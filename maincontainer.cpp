@@ -30,7 +30,7 @@ mainContainer::mainContainer(QWidget *parent) : QWidget(parent), ui(new Ui::main
     QString jsonRules = file.readAll();
     file.close();
     QTextStream cout(stdout);
-    cout << jsonRules << endl;
+    cout << jsonRules << Qt::endl;
     QString jsonTopRuleStr;
     QString jsonDumpsysRuleStr;
     QJsonParseError e;
@@ -47,7 +47,7 @@ mainContainer::mainContainer(QWidget *parent) : QWidget(parent), ui(new Ui::main
         }
     else
         {
-            cout << "Error incorrect json chartrules!!! " << e.errorString() << " " << e.offset << endl;
+            cout << "Error incorrect json chartrules!!! " << e.errorString() << " " << e.offset << Qt::endl;
         }
 
     //create adbviewer object
@@ -58,11 +58,13 @@ mainContainer::mainContainer(QWidget *parent) : QWidget(parent), ui(new Ui::main
     chartsTop = new chartManager(ui->charts_scrollArea->widget());
     chartsTop->setstrDateTimeFile(datetimefile);
     chartsTop->setjsonChartRuleObject(jsonTopRuleStr);
+    chartsTop->connectTracers();
     connect(adbViewer_cont, SIGNAL(processTopStatNewData(QString, QString)), chartsTop, SLOT(dataIncome(QString, QString)));
     //create chart manager for dumpsys table and connect data slot to signal from adbviwer
     chartsDumpsys = new chartManager(ui->chartsDumpsys_scrollArea->widget());
     chartsDumpsys->setstrDateTimeFile(datetimefile);
     chartsDumpsys->setjsonChartRuleObject(jsonDumpsysRuleStr);
+    chartsDumpsys->connectTracers();
     connect(adbViewer_cont, SIGNAL(processDumpsysStatNewData(QString, QString)), chartsDumpsys, SLOT(dataIncome(QString, QString)));
 
     //QAction* resetAllCharts_toolbutton = new QAction("Reset All Charts",ui->toolbar);
@@ -232,24 +234,24 @@ int mainContainer::on_savechartimages_toolbutton_clicked()
     QString filepath = rootstatsdir + statsdirlocation + datetimefile + "/" + chartfoldername + "/" + chartdatetime + "/";
     if (!QDir(filepath).exists())
         {
-            cout << "Creating stats dir: " << filepath << endl;
+            cout << "Creating stats dir: " << filepath << Qt::endl;
             if (QDir().mkpath(filepath))
                 {
-                    cout << "Creating succesfull!" << endl;
+                    cout << "Creating succesfull!" << Qt::endl;
                 }
             else
                 {
-                    cout << "unable to create: " << filepath << endl;
+                    cout << "unable to create: " << filepath << Qt::endl;
                 }
         }
     else
         {
-            cout << "Directory alredy exists: " << filepath << endl;
+            cout << "Directory alredy exists: " << filepath << Qt::endl;
         }
     if (!QFile(filepath).exists())
         {
             QTextStream cout(stdout);
-            cout << "imposible to create folder" << endl;
+            cout << "imposible to create folder" << Qt::endl;
         }
     else
         {
@@ -275,6 +277,6 @@ int mainContainer::on_savechartimages_toolbutton_clicked()
 void mainContainer::on_setting_changed()
 {
     QTextStream cout(stdout);
-    cout<<"maincontainersettings"<<endl;
+    cout<<"maincontainersettings"<<Qt::endl;
     adbViewer_cont->setadbBinary(adbViewer_cont->whereAdbExists());
 }

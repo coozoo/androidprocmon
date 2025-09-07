@@ -12,7 +12,7 @@ adbExecute::adbExecute(QMainWindow *parent) : QMainWindow(parent)
     sethistoryDir(QStandardPaths::standardLocations(QStandardPaths::ConfigLocation)[0] + "/" + qAppName());
 #endif
     QTextStream cout(stdout);
-    cout<<gethistoryDir()<<endl;
+    cout<<gethistoryDir()<<Qt::endl;
     QDir().mkpath(gethistoryDir()) ;
     //read history from file
     QStringList wordList = ReadFullFile("exec_history").split("\n");
@@ -20,7 +20,7 @@ adbExecute::adbExecute(QMainWindow *parent) : QMainWindow(parent)
     //wordList=wordset.toList();
 
     //inverse strings from history file to make appear latest on top of completer (got this oneliner somwhere from stackowerflow)
-    for (int k = 0; k < (wordList.size() / 2); k++) wordList.swap(k, wordList.size() - (1 + k));
+    for (int k = 0; k < (wordList.size() / 2); k++) std::swap(wordList[k], wordList[wordList.size() - (1 + k)]);
     //leave only unique strings to update history file later
     QStringList wordListUnique;
     for (int k = 0; k < wordList.count(); k++)
@@ -130,7 +130,7 @@ adbExecute::adbExecute(QMainWindow *parent) : QMainWindow(parent)
 
     //yeah I know it's a stupid to swap, traverse, inverse, blablabla.. but I'm generating stupid things
     //traverse back and update history file with unique only
-    for (int k = 0; k < (wordListUnique.size() / 2); k++) wordListUnique.swap(k, wordListUnique.size() - (1 + k));
+    for (int k = 0; k < (wordListUnique.size() / 2); k++) std::swap(wordListUnique[k], wordListUnique[wordListUnique.size() - (1 + k)]);
     emit RewriteFullFileSignal("exec_history", wordListUnique.join("\n"));
 
 
@@ -171,7 +171,8 @@ void adbExecute::on_executeCommand_pushbutton_clicked()
 
     if (!procexec->isOpen())
         {
-            procexec->start(adbBinary + " -s " + androidDevice + " shell");
+            //procexec->start(adbBinary + " -s " + androidDevice + " shell");
+            procexec->start(adbBinary, QStringList() << "-s" << androidDevice << "shell");
             if (!procexec->isOpen() && procexecGetSU_checkbox->isChecked())
                 {
                     getSU();
@@ -184,7 +185,7 @@ void adbExecute::on_executeCommand_pushbutton_clicked()
                 }
             else
                 {
-                    cout << "Something weird no such device:" << androidDevice << ", maybe it was disconnected." << endl;
+                    cout << "Something weird no such device:" << androidDevice << ", maybe it was disconnected." << Qt::endl;
                 }
 
 
@@ -248,7 +249,9 @@ void adbExecute::getSU()
 {
     if (!procexec->isOpen())
         {
-            procexec->start(adbBinary + " -s " + androidDevice + " shell\n");
+            //procexec->start(adbBinary + " -s " + androidDevice + " shell\n");
+        procexec->start(adbBinary, QStringList() << "-s" << androidDevice << "shell");
+        procexec->write("\n");
             execresult_plaintextedit->appendPlainText("####### Trying to get root privileges #######");
             if (procexec->isOpen())
                 {
@@ -299,7 +302,7 @@ void adbExecute::on_completer_activated(QString)
 void adbExecute::on_procexec_closed(int reason)
 {
     QTextStream cout(stdout);
-    cout << reason << endl;
+    cout << reason << Qt::endl;
     execresult_plaintextedit->appendPlainText("####### Adb closed " + QString::number(reason) + " ####### device: " + getandroidDevice());
     if (procexec->isOpen())
         {
@@ -325,7 +328,7 @@ void adbExecute::cmdUpdateError()
     QString appendText(procexec->readAll());
     execresult_plaintextedit->appendPlainText(appendText.toUtf8().replace("\r", "\n").replace("\n\n", "\n"));
     QTextStream cout(stdout);
-    cout << appendText << endl;
+    cout << appendText << Qt::endl;
 }
 
 /* on standard stream after excute command
@@ -337,7 +340,7 @@ void adbExecute::cmdUpdateText()
 {
 //    QTextStream cout(stdout);
 //    QString appendText(procexec->readAll());
-//    cout<<appendText<<endl;
+//    cout<<appendText<<Qt::endl;
 
 //    QStringList wholeStringList;
 //    //wholeStringList=QString(appendText.toUtf8().replace("\r\n","\n")).split(QRegExp("[\n]"),QString::SkipEmptyParts);
@@ -376,7 +379,7 @@ void adbExecute::cmdUpdateText()
     appendText = procexec->readAll();
     QStringList wholeStringList;
     //wholeStringList=QString(appendText.toUtf8().replace("\r\n","\n")).split(QRegExp("[\n]"),QString::SkipEmptyParts);
-    wholeStringList = QString(appendText.toUtf8().replace("\r", "\n").replace("\n\n", "\n")).split(QRegExp("[\n]"), QString::SkipEmptyParts);
+    wholeStringList = QString(appendText.toUtf8().replace("\r", "\n").replace("\n\n", "\n")).split(QRegularExpression("[\n]"), Qt::SkipEmptyParts);
     qDebug() << wholeStringList;
     foreach (QString str, wholeStringList)
         {
@@ -427,7 +430,7 @@ void adbExecute::on_AppendStringToFile(QString strPath, QString appendString)
     QFile outFile(gethistoryDir() + "/" + strPath);
     outFile.open(QIODevice::WriteOnly | QIODevice::Append);
     QTextStream textStream(&outFile);
-    textStream << appendString << endl;
+    textStream << appendString << Qt::endl;
     outFile.close();
 }
 
@@ -440,7 +443,7 @@ void adbExecute::on_RewriteFullFileSignal(QString strPath, QString appendString)
     QFile outFile(gethistoryDir() + "/" + strPath);
     outFile.open(QIODevice::WriteOnly);
     QTextStream textStream(&outFile);
-    textStream << appendString << endl;
+    textStream << appendString << Qt::endl;
     outFile.close();
 }
 
@@ -458,7 +461,7 @@ bool adbExecute::eventFilter(QObject *obj, QEvent *event)
                     if (keyEvent->key() == Qt::Key_Up)
                         {
                             QTextStream cout(stdout);
-                            cout << "lineEdit -> Qt::Key_Up " << modelCursor << endl;
+                            cout << "lineEdit -> Qt::Key_Up " << modelCursor << Qt::endl;
                             if (modelCursor > -1)
                                 {
                                     modelCursor--;
@@ -470,7 +473,7 @@ bool adbExecute::eventFilter(QObject *obj, QEvent *event)
                     else if (keyEvent->key() == Qt::Key_Down)
                         {
                             QTextStream cout(stdout);
-                            cout << "lineEdit -> Qt::Key_Down " << modelCursor << endl;
+                            cout << "lineEdit -> Qt::Key_Down " << modelCursor << Qt::endl;
                             if (modelCursor >= -1 && modelCursor < completer->model()->rowCount() - 1)
                                 {
                                     modelCursor++;
@@ -482,7 +485,7 @@ bool adbExecute::eventFilter(QObject *obj, QEvent *event)
                     else if (keyEvent->key() == Qt::Key_Tab)
                         {
                             QTextStream cout(stdout);
-                            cout << "lineEdit -> Qt::Key_Tab " << endl;
+                            cout << "lineEdit -> Qt::Key_Tab " << Qt::endl;
 //                if(modelCursor>=-1 && modelCursor<completer->model()->rowCount()-1)
 //                {
 //                    modelCursor++;

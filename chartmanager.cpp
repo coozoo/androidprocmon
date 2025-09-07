@@ -11,8 +11,7 @@ chartManager::chartManager(QWidget *parent) : QWidget(parent)
     for(int i=0;i<listCharts.count();i++)
     {
        chartRealTime *chart=listCharts.at(i);
-       QTextStream cout(stdout);
-       cout<<chart;
+        qDebug()<<chart;
     }
     //connect if property for json rules changed
     connect(this,SIGNAL(jsonChartRuleObjectChanged()),this,SLOT(on_jsonChartRuleObjectChanged()));
@@ -48,7 +47,7 @@ void chartManager::on_jsonChartRuleObjectChanged()
     int startrow=0;
     int numberinrow=2;
     //add charts
-    foreach (const QJsonValue & chartItem, jsonRuleArr)
+    for (const QJsonValue &chartItem : jsonRuleArr)
     {
         qDebug()<<"chartItem"<<chartItem;
         //place each chart into mainwindow
@@ -95,7 +94,7 @@ void chartManager::on_jsonChartRuleObjectChanged()
         // add graphs (lines) to chart
         QStringList graphs=QStringList();
         QJsonArray jsonGraphsArr=chartItem.toObject()["graphs"].toArray();
-        foreach (const QJsonValue & graphItem, jsonGraphsArr)
+        for (const QJsonValue &graphItem : jsonGraphsArr)
         {
             qDebug()<<"graphItem"<<graphItem;
             graphs.append(graphItem.toObject()["name"].toString());
@@ -109,8 +108,7 @@ void chartManager::on_jsonChartRuleObjectChanged()
     for(int i=0;i<listCharts.count();i++)
     {
        chartRealTime *chart=listCharts.at(i);
-       QTextStream cout(stdout);
-       cout<<chart->getWindowTitle()<<endl;
+        qDebug()<<chart->getWindowTitle();
     }
 
 }
@@ -128,14 +126,14 @@ void chartManager::dataIncome(QString headersString, QString dataString)
     QJsonArray jsonRuleArr=jsonRuleObj["charts"].toArray();
     // very stupid attempt to sum and multiply items
     // it works on simple conditions but it really should be changed
-    foreach (const QJsonValue & chartItem, jsonRuleArr)
+    for (const QJsonValue &chartItem : jsonRuleArr)
     {
         qDebug()<<"chartItem"<<chartItem;
         //chartItem.toObject()["chart"].toString()
         QStringList graphs=QStringList();
         QJsonArray jsonGraphsArr=chartItem.toObject()["graphs"].toArray();
-        QList<int> dataset;
-        foreach (const QJsonValue & graphItem, jsonGraphsArr)
+        QList<double> dataset;
+        for (const QJsonValue &graphItem : jsonGraphsArr)
         {
             qDebug()<<"graphItem"<<graphItem;
             QString graphrule=graphItem.toObject()["rule"].toString();
@@ -241,7 +239,7 @@ void chartManager::dataIncome(QString headersString, QString dataString)
  * dataString - string with commaseparated values
  * return: id  (-1 if not found)
  */
-int chartManager::getValueByHeader(QString header, QString headersString, QString dataString)
+double chartManager::getValueByHeader(QString header, QString headersString, QString dataString)
 {
     QStringList headersStringList=headersString.split(",");
     QStringList dataStringList=dataString.split(",");
@@ -257,28 +255,27 @@ int chartManager::getValueByHeader(QString header, QString headersString, QStrin
         }
 
     }
-    QTextStream cout(stdout);
-    cout<<"IIIIIIIIIIIIIIIIIIIIIII"<<endl;
-    cout<<header<<endl;
+    qDebug()<<"IIIIIIIIIIIIIIIIIIIIIII";
+    qDebug()<<header;
     qDebug()<<headersStringList;
     qDebug()<<dataStringList;
-    cout<<headersStringList.count()<<"  "<<dataStringList.count()<<endl;
-    cout<<"IIIIIIIIIIIIIIIIIIIIIII"<<endl;
+    qDebug()<<headersStringList.count()<<"  "<<dataStringList.count();
+    qDebug()<<"IIIIIIIIIIIIIIIIIIIIIII";
     if(headersStringList.count()==dataStringList.count())
     {
     for(int i=0;i<headersStringList.count();i++)
     {
         if(headersStringList[i]==header)
         {
-            return dataStringList[i].toInt();
+            return dataStringList[i].toDouble();
         }
     }
     }
         else
-    {QTextStream cout(stdout);
-        cout<<"impossible to find: length does not matched";
+    {
+        qDebug()<<"impossible to find: length does not matched";
         return -1;}
-        cout<<"not Found";
+        qDebug()<<"not Found";
         return -1;
 }
 
@@ -299,10 +296,21 @@ void chartManager::resetAllCharts()
  */
 void chartManager::setAllRanges(int range)
 {
+    qDebug()<<"setAllRanges"<<range;
     for(int i=0;i<listCharts.count();i++)
     {
        chartRealTime *chart=listCharts.at(i);
        chart->setRange(range);
+    }
+}
+
+void chartManager::setisflow(bool flow)
+{
+    qDebug()<<"setisflow"<<flow;
+    for(int i=0;i<listCharts.count();i++)
+    {
+       chartRealTime *chart=listCharts.at(i);
+       chart->setisflow(flow);
     }
 }
 
@@ -314,6 +322,7 @@ void chartManager::setAllRanges(int range)
  */
 void chartManager::saveAllCharts(QString imagePath, QString imageType, int width, int height)
 {
+    qDebug()<<"saveAllCharts"<<imagePath<<imageType<<width<<height;
     for(int i=0;i<listCharts.count();i++)
     {
        chartRealTime *chart=listCharts.at(i);
@@ -324,13 +333,24 @@ void chartManager::saveAllCharts(QString imagePath, QString imageType, int width
 
 bool chartManager::eventFilter(QObject* obj, QEvent *event)
 {
-    QTextStream cout(stdout);
+    Q_UNUSED(obj)
     if (event->type() == QEvent::MouseMove)
       {
         QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
-        cout<<QString("Chart main window mouse move (%1,%2)").arg(mouseEvent->pos().x()).arg(mouseEvent->pos().y())<<endl;
+        qDebug()<<QString("Chart main window mouse move (%1,%2)").arg(mouseEvent->pos().x()).arg(mouseEvent->pos().y());
       }
       return false;
 }
 
+
+void chartManager::connectTracers()
+{
+    for (int i = 0; i < listCharts.count(); ++i) {
+        for (int j = 0; j < listCharts.count(); ++j) {
+            if (i != j) {
+                connect(listCharts[i], &chartRealTime::tracerIndexChanged, listCharts[j], &chartRealTime::showTracerAtIndex);
+            }
+        }
+    }
+}
 

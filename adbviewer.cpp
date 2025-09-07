@@ -43,10 +43,18 @@ adbViewer::adbViewer(QWidget *parent) : QWidget(parent)
     enableFilter_checkbox->setText(tr("Enable"));
     //combobox with filters (regexp or simple)
     filterCondition_combobox = new QComboBox();
-    filterCondition_combobox->setAutoCompletion(true);
-    filterCondition_combobox->setDuplicatesEnabled(false);
     filterCondition_combobox->setEditable(true);
+    QCompleter* completer = new QCompleter(filterCondition_combobox);
+    completer->setCompletionMode(QCompleter::PopupCompletion);
+    completer->setCaseSensitivity(Qt::CaseInsensitive);
+    filterCondition_combobox->setCompleter(completer);
+    filterCondition_combobox->setDuplicatesEnabled(false);
     filterCondition_combobox->setInsertPolicy(QComboBox::NoInsert);
+    //shows if condition inside is regexp
+    useRegexp_checkbox = new QCheckBox();
+    useRegexp_checkbox->setChecked(true);
+    useRegexp_checkbox->setText(tr("RegExp"));
+    useRegexp_checkbox->setToolTip(tr("Use regexp"));
     //fill out combobox with filters from file
     QFile file(filters_list_filepath + "/filters_list");
     QDir().mkpath(filters_list_filepath) ;
@@ -68,7 +76,9 @@ adbViewer::adbViewer(QWidget *parent) : QWidget(parent)
     if (filter_index_ok)
         {
             filterCondition_combobox->setCurrentIndex(filter_index_id);
+         on_filterCondition_combobox_currentIndexChanged(filterCondition_combobox->currentIndex());
         }
+
     //button to save current filter
     rememberFilter_toolbutton = new QToolButton();
     rememberFilter_toolbutton->setToolTip(tr("Save filter"));
@@ -77,11 +87,7 @@ adbViewer::adbViewer(QWidget *parent) : QWidget(parent)
     deleteFilter_toolbutton = new QToolButton();
     deleteFilter_toolbutton->setToolTip(tr("Delete current filter from saved"));
     deleteFilter_toolbutton->setIcon(QIcon(QPixmap(":/images/remove.png")));
-    //shows if condition inside is regexp
-    useRegexp_checkbox = new QCheckBox();
-    useRegexp_checkbox->setChecked(true);
-    useRegexp_checkbox->setText(tr("RegExp"));
-    useRegexp_checkbox->setToolTip(tr("Use regexp"));
+
 
     //processlist section
     //lineedit to show errors
@@ -442,7 +448,7 @@ void adbViewer::on_devicesList_combobox_currentIndexChanged(int)
 void adbViewer::on_proc_closed(int reason)
 {
     QTextStream cout(stdout);
-    cout << reason << endl;
+    cout << reason << Qt::endl;
     if (proc->isOpen())
         {
             proc->close();
@@ -476,10 +482,8 @@ void adbViewer::startlogcat()
 //    S — Silent (highest priority, on which nothing is ever printed)
     if (proc->processId() == 0)
         {
-
-            QTextStream cout(stdout);
-            cout << adbBinary + " -s " + devicesList_combobox->currentText() + " logcat" << endl;
-            proc->start(adbBinary + " -s " + devicesList_combobox->currentText() + " logcat");
+            qDebug()<<adbBinary<< "-s" << devicesList_combobox->currentText() << "logcat";
+            proc->start(adbBinary, QStringList() << "-s" << devicesList_combobox->currentText() << "logcat");
         }
 }
 
@@ -495,7 +499,7 @@ void adbViewer::on_refreshDevices_toolbutton_clicked()
     QString result;
     result = executeADBCommand("devices");
     QTextStream cout(stdout);
-    cout << result << endl;
+    qDebug() << result;
 
     QRegularExpression reg("(.+)device");
 
@@ -508,7 +512,7 @@ void adbViewer::on_refreshDevices_toolbutton_clicked()
                     if (match.captured(1).contains(" ") == 0)
                         {
                             QTextStream cout(stdout);
-                            cout << match.captured(1).trimmed() << endl;
+                            cout << match.captured(1).trimmed() << Qt::endl;
                             devicesList_combobox->addItem(match.captured(1).trimmed());
                         }
                 }
@@ -529,7 +533,10 @@ QString adbViewer::executeADBCommand(QString adbCommand)
 {
     QString result;
     QProcess adbexec;
-    adbexec.start(adbBinary + " " + adbCommand);
+    adbexec.setProcessChannelMode(QProcess::MergedChannels);
+    //adbexec.start(adbBinary + " " + adbCommand);
+    adbexec.start(adbBinary, adbCommand.split(' '));
+    qDebug()<<"executeADBCommand: "<<adbBinary<<adbCommand.split(' ');
     if (adbexec.waitForStarted())
         {
             adbexec.waitForFinished();
@@ -537,6 +544,9 @@ QString adbViewer::executeADBCommand(QString adbCommand)
             if (result == "")
                 {result = adbexec.readAll();}
         }
+ else {
+    qDebug() << "ADB process failed to start:" << adbexec.errorString();
+}
     adbexec.close();
     return result;
 
@@ -614,7 +624,7 @@ void adbViewer::updateText()
         {
 
             QTextStream cout(stdout);
-            cout << appendText << endl;
+            cout << appendText << Qt::endl;
             //QRegularExpression reg("(.+GCM-MESSAGE-PAYLOD.+}])");
             QRegularExpression reg(filterCondition_combobox->currentText());
 
@@ -648,7 +658,7 @@ void adbViewer::getProcesslist()
     QTextStream cout(stdout);
     //run top one time with delay one second
     QString command = "-s " + devicesList_combobox->currentText() + " shell " + topCommand + " -n 1 -d 1";
-    cout << "topversion:" << gettopVersion() << ";" << endl;
+    cout << "topversion:" << gettopVersion() << ";" << Qt::endl;
     if (gettopVersion().toLower().contains("toybox"))
         {
             command += " -b -o Pid,User,PR,NI,VIRT,RES,SHR,S,%CPU,%MEM,pcy,Name";
@@ -657,7 +667,7 @@ void adbViewer::getProcesslist()
         {
             command += " -b";
         }
-    cout << command << endl;
+    cout << command << Qt::endl;
     QString result;
     result = executeADBCommand(command);
     //one more stupud thing to handle bug with column names
@@ -705,7 +715,7 @@ void adbViewer::getProcesslist()
 
             //qDebug() << destr.split(" ");
             //now we have only one space between each column
-            QStringList valuesList = destr.split(" ", QString::SkipEmptyParts);
+            QStringList valuesList = destr.split(" ", Qt::SkipEmptyParts);
             if (valuesList.count() >= 1)
                 {
                     //first string supposed to be pid (int value)
@@ -811,7 +821,7 @@ void adbViewer::getProcesslist()
                                                     QString prevvalue = processList_model->data(processList_model->index(rowj - 1, columnHeaderCount - 1)).toString();
                                                     processList_model->setItem(rowj - 1, columnHeaderCount - 1, new QStandardItem(QString(prevvalue + " " + columnvalue)));
                                                     processList_model->removeColumns(columnHeaderCount, 1);
-                                                    //cout<<prevvalue<<columnvalue<<endl;
+                                                    //cout<<prevvalue<<columnvalue<<Qt::endl;
                                                 }
                                             else
                                                 {
@@ -876,7 +886,7 @@ void adbViewer::getProcesslist_error()
     QProcess *topProcessExec = static_cast<QProcess *>(sender());
     QString appendText(topProcessExec->readAll());
     QTextStream cout(stdout);
-    cout << appendText << endl;
+    cout << appendText << Qt::endl;
     processListStatus_lineedit->setText("Error: " + appendText + " " + topProcessExec->errorString());
     processListStatus_lineedit->setVisible(true);
     if (topProcessExec->isOpen())
@@ -895,7 +905,7 @@ void adbViewer::getProcesslist_standard()
     QProcess *topProcessExec = static_cast<QProcess *>(sender());
     QString appendText(topProcessExec->readAll());
     QTextStream cout(stdout);
-    cout << appendText << endl;
+    cout << appendText << Qt::endl;
     if (topProcessExec->isOpen())
         {
             topProcessExec->close();
@@ -911,7 +921,7 @@ void adbViewer::on_topProcessExec_closed(int reason)
 {
     QProcess *topProcessExec = static_cast<QProcess *>(sender());
     QTextStream cout(stdout);
-    cout << reason << endl;
+    cout << reason << Qt::endl;
     processListStatus_lineedit->setText(processListStatus_lineedit->text() + " Adb closed " + QString::number(reason));
     processListStatus_lineedit->setVisible(true);
     if (topProcessExec->isOpen())
@@ -960,7 +970,7 @@ void adbViewer::startProcessTopStat()
                         }
                     headercommand += "|grep -i pid|grep -i cpu";
                     QTextStream cout(stdout);
-                    cout << "headercommand: " << headercommand << endl;
+                    cout << "headercommand: " << headercommand << Qt::endl;
                     QString result;
                     result = executeADBCommand(headercommand);
                     result.replace("S[%CPU]", "S %CPU ");
@@ -997,7 +1007,7 @@ void adbViewer::startProcessTopStat()
                         {
                             totalcpucommand += "|grep User|grep System";
                         }
-                    cout << "totalcpucommand: " << totalcpucommand << endl;
+                    cout << "totalcpucommand: " << totalcpucommand << Qt::endl;
                     // remove all multiple spaces
                     QString resulttotalcpu;
                     resulttotalcpu = executeADBCommand(totalcpucommand);
@@ -1009,8 +1019,8 @@ void adbViewer::startProcessTopStat()
                             resulttotalcpu.replace(QString("  "), QString(" "));
                         }
 
-                    cout << result << endl;
-                    cout << resulttotalcpu << endl;
+                    cout << result << Qt::endl;
+                    cout << resulttotalcpu << Qt::endl;
                     //make table headers for total CPU system, user...
                     QString resulttotalcpuHeaders;
                     if (gettopVersion() == "")
@@ -1048,7 +1058,7 @@ void adbViewer::startProcessTopStat()
                         }
                     //add time header
                     result = "Time " + resulttotalcpuHeaders + result;
-                    cout << result << endl;
+                    cout << result << Qt::endl;
                     // and now add all headers to table view
                     QStringList headersList = result.split(" ");
                     if (headersList.count() >= 1)
@@ -1064,7 +1074,8 @@ void adbViewer::startProcessTopStat()
                     //actually here is the start top with delay parameter
                     //tried a lot of devices looks like this way should work
                     //to get system and process data
-                    QString command = adbBinary + " -s " + devicesList_combobox->currentText() + " shell " + topCommand + " -d " + processTopStatTimeout_spinbox->text();
+                    //QString command = adbBinary + " -s " + devicesList_combobox->currentText() + " shell " + topCommand + " -d " + processTopStatTimeout_spinbox->text();
+                    QString command = topCommand + " -d " + processTopStatTimeout_spinbox->text();
                     if (gettopVersion().toLower().contains("toybox"))
                         {
                             command += " -b -o Pid,User,PR,NI,VIRT,RES,SHR,S,%CPU,%MEM,pcy,Name ";
@@ -1075,9 +1086,11 @@ void adbViewer::startProcessTopStat()
                             command += " -b";
                             command += " |grep -v grep| grep --line-buffered -E '" + processTopStatFilter_lineedit->text() + "$|usr.*sys'| cat";
                         }
-                    cout << command << endl;
+                    cout << command << Qt::endl;
+                        QStringList adbArgs;
+                        adbArgs << "-s" << devicesList_combobox->currentText() << "shell" << command;
 
-                    processTopStatExec->start(command);
+                    processTopStatExec->start(adbBinary, adbArgs);
                     processTopStatFilter_lineedit->setEnabled(false);
                     processTopStatTimeout_spinbox->setEnabled(false);
                     processTopStatStartStop_pushbutton->setText(tr("Stop"));
@@ -1161,7 +1174,7 @@ void adbViewer::processTopStatUpdateText()
                         {
                             totalCPULoadString = str.left(str.indexOf("\n"));
 
-                            cout << "totalCPULoadString" << totalCPULoadString << endl;
+                            cout << "totalCPULoadString" << totalCPULoadString << Qt::endl;
                             totalCPULoadString = totalCPULoadString.replace("CPU:", "").trimmed();
                         }
                     else if (str.contains(processTopStatFilter_lineedit->text()))
@@ -1232,7 +1245,7 @@ void adbViewer::processTopStatUpdateText()
 
                     appTopLine = dt + " " + totalCPUBuffer + appTopLine;
                     QTextStream cout(stdout);
-                    cout << "appTopLine" << appTopLine << endl;
+                    cout << "appTopLine" << appTopLine << Qt::endl;
 
                     QStringList valuesList = appTopLine.split(" ");
                     if (valuesList.count() >= 1)
@@ -1375,7 +1388,7 @@ void adbViewer::processTopStatUpdateText()
                             //really soon I will end up with my own memoory parser... I thoutght top parsing will be easier..
                             if (gettopVersion().toLower().contains("busybox"))
                                 {
-                                    QString rsscommand = " -s " + devicesList_combobox->currentText() + " shell cat /proc/" + processTopStat_model->data(processTopStat_model->index(rowj, getHeaderIDbyNameOfProcessTopStat("PID"))).toString() + "/status|grep RSS|grep -Eo '[0-9]{1,50}'";
+                                    QString rsscommand = "-s " + devicesList_combobox->currentText() + " shell cat /proc/" + processTopStat_model->data(processTopStat_model->index(rowj, getHeaderIDbyNameOfProcessTopStat("PID"))).toString() + "/status|grep RSS|grep -Eo '[0-9]{1,50}'";
                                     QString resultrss;
                                     resultrss = executeADBCommand(rsscommand);
                                     resultrss = resultrss.trimmed();
@@ -1383,7 +1396,7 @@ void adbViewer::processTopStatUpdateText()
                                 }
                             if (gettopVersion().toLower().contains("busybox") || gettopVersion().toLower().contains("toybox"))
                                 {
-                                    QString thrcommand = " -s " + devicesList_combobox->currentText() + " shell ls /proc/" + processTopStat_model->data(processTopStat_model->index(rowj, getHeaderIDbyNameOfProcessTopStat("PID"))).toString() + "/task|wc -l";
+                                    QString thrcommand = "-s " + devicesList_combobox->currentText() + " shell ls /proc/" + processTopStat_model->data(processTopStat_model->index(rowj, getHeaderIDbyNameOfProcessTopStat("PID"))).toString() + "/task|wc -l";
                                     QString resultthr;
                                     resultthr = executeADBCommand(thrcommand);
                                     resultthr = resultthr.trimmed();
@@ -1425,7 +1438,7 @@ void adbViewer::processTopStatUpdateText()
                                             logLine = logLine.left(logLine.length() - 1);
                                         }
                                     QTextStream cout(stdout);
-                                    cout << headersList << endl << logLine << endl;
+                                    cout << headersList << Qt::endl << logLine << Qt::endl;
                                     writeStatCSV(namecur + "_" + pidcur + "_top", logLine, headersList);
                                 }
                             emit processTopStatNewData(headersList, logLine);
@@ -1529,28 +1542,28 @@ void adbViewer::ShowContextMenu_processList_tableview(const QPoint &pos)
                     int columnid = getHeaderIDbyNameOfProcessList("name");
                     int rowid = tableview->selectionModel()->currentIndex().row();
                     QTextStream cout(stdout);
-                    cout << tableview->model()->index(rowid, columnid).data().toString() << endl;
+                    cout << tableview->model()->index(rowid, columnid).data().toString() << Qt::endl;
                     processTopStatFilter_lineedit->setText(tableview->model()->index(rowid, columnid).data().toString());
                     processTopStatStartStop_pushbutton->click();
                 }
             else
                 {
                     QTextStream cout(stdout);
-                    cout << "another process monitor already started" << endl;
+                    cout << "another process monitor already started" << Qt::endl;
                 }
             if (!dumpsysProcTimer.isActive())
                 {
                     int columnid = getHeaderIDbyNameOfProcessList("name");
                     int rowid = tableview->selectionModel()->currentIndex().row();
                     QTextStream cout(stdout);
-                    cout << tableview->model()->index(rowid, columnid).data().toString() << endl;
+                    cout << tableview->model()->index(rowid, columnid).data().toString() << Qt::endl;
                     processDumpsysStatFilter_lineedit->setText(tableview->model()->index(rowid, columnid).data().toString());
                     processDumpsysStatStartStop_pushbutton->click();
                 }
             else
                 {
                     QTextStream cout(stdout);
-                    cout << "another dumpsys already launched" << endl;
+                    cout << "another dumpsys already launched" << Qt::endl;
                 }
         }
 //    else if (selectedItem==enableLog)
@@ -1597,19 +1610,19 @@ void adbViewer::writeStatCSV(QString appendFileName, QString logLine, QString he
     QString filepath = rootstatsdir + statsdirlocation + getstrDateTimeFile() + "/";
     if (!QDir(filepath).exists())
         {
-            cout << "Creating stats dir: " << filepath << endl;
+            cout << "Creating stats dir: " << filepath << Qt::endl;
             if (QDir().mkpath(filepath))
                 {
-                    cout << "Creating succesfull!" << endl;
+                    cout << "Creating succesfull!" << Qt::endl;
                 }
             else
                 {
-                    cout << "unable to create: " << filepath << endl;
+                    cout << "unable to create: " << filepath << Qt::endl;
                 }
         }
     else
         {
-            cout << "Directory alredy exists: " << filepath << endl;
+            cout << "Directory alredy exists: " << filepath << Qt::endl;
         }
     filepath = filepath + appendFileName + ".csv";
     bool exists = false;
@@ -1640,7 +1653,7 @@ void adbViewer::writeStatCSV(QString appendFileName, QString logLine, QString he
                     {
                         QTextStream textdata(&outFile);
                         QTextStream textStream(&newFile);
-                        textStream << headersList << endl;
+                        textStream << headersList << Qt::endl;
                         int linecnt = 0;
                         while (!textdata.atEnd())
                             {
@@ -1666,11 +1679,11 @@ void adbViewer::writeStatCSV(QString appendFileName, QString logLine, QString he
     QTextStream textStream(&outFile);
     if (!exists)
         {
-            textStream << headersList << endl << logLine << endl;
+            textStream << headersList << Qt::endl << logLine << Qt::endl;
         }
     else
         {
-            textStream << logLine << endl;
+            textStream << logLine << Qt::endl;
         }
     outFile.close();
 }
@@ -1724,7 +1737,7 @@ void adbViewer::on_processDumpsysStatStartStop_pushbutton_clicked()
                 {
                     processDumpsysAndroidVersion = executeADBCommand("-s " + devicesList_combobox->currentText() + " shell getprop ro.build.version.release").trimmed();
                     QTextStream cout(stdout);
-                    cout << "Android Version: " << processDumpsysAndroidVersion << endl;
+                    cout << "Android Version: " << processDumpsysAndroidVersion << Qt::endl;
                     dumpsysProcTimer.start(processDumpsysStatTimeout_spinbox->value() * 1000);
                     emit dumpsysProcStarted();
                 }
@@ -1737,7 +1750,7 @@ void adbViewer::on_processDumpsysStatStartStop_pushbutton_clicked()
 void adbViewer::on_dumpsysProcTimer()
 {
     QTextStream cout(stdout);
-    cout << "dumpsys triggered" << endl;
+    cout << "dumpsys triggered" << Qt::endl;
     QString dt = QDateTime::currentDateTime().toString("dd/MM/yyyy_hh:mm:ss");
 
     QString result = executeADBCommand("-s " + devicesList_combobox->currentText() + " shell dumpsys meminfo " + processDumpsysStatFilter_lineedit->text());
@@ -1745,7 +1758,8 @@ void adbViewer::on_dumpsysProcTimer()
     //another stupid parsing
     if (!result.toLower().contains("no process found") && result != "")
         {
-            result = result.replace(QRegExp("(\\S)\\s(\\S)"), "\\1_\\2");
+            result.replace(QRegularExpression("Unknown\\W\\s{10,}"), "Unknown:    0   ");
+            result.replace(QRegularExpression("(\\S)\\s(\\S)"), "\\1_\\2");
             //result=result.trimmed();
             while (result.contains("  "))
                 {
@@ -1753,7 +1767,7 @@ void adbViewer::on_dumpsysProcTimer()
                 }
             //qDebug()<<result;
             QStringList resultStringList;
-            foreach (QString str, result.split("\n", QString::SkipEmptyParts))
+            foreach (QString str, result.split("\n", Qt::SkipEmptyParts))
                 {
                     resultStringList.append(str.trimmed());
                 }
@@ -1769,7 +1783,7 @@ void adbViewer::on_dumpsysProcTimer()
                 {
 
                     QTextStream cout(stdout);
-                    cout << str << endl;
+                    cout << str << Qt::endl;
                     if (str.toLower().contains("pid") && str.contains(processDumpsysStatFilter_lineedit->text()))
                         {
                             QStringList columnsStrings = str.split("_");
@@ -1841,43 +1855,60 @@ void adbViewer::on_dumpsysProcTimer()
                         }
                     else if (currentsection == "aftermemmoryusage")
                         {
-                            if (subcurrentsection == "" && str.toLower().contains("app_summary"))
-                                {
-                                    subcurrentsection = "appsummary";
-                                    customsubheader = str;
-                                    headerstrflag = true;
-                                }
-                            else if (subcurrentsection == "appsummary" && headerstrflag)
-                                {
-                                    if (str.contains("----"))
-                                        {
-                                            headerstrflag = false;
-                                        }
-                                    else
-                                        {
-                                            customsubheader = customsubheader + "|" + str;
-                                        }
-                                }
-                            else if (subcurrentsection == "appsummary" && !headerstrflag && str.contains(":"))
-                                {
-                                    foreach (QString node, str.split(" "))
-                                        {
-                                            if (node.contains(":"))
-                                                {
-                                                    headerLine = headerLine + customsubheader + "|" + node.left(node.length() - 1) + ",";
-                                                }
-                                            else
-                                                {
-                                                    dataLine = dataLine + node + ",";
-                                                }
-                                        }
-                                }
-                            if (subcurrentsection == "appsummary" && !headerstrflag && str.contains("TOTAL"))
-                                {
-                                    subcurrentsection = "";
-                                    customsubheader = "";
+                            // --- DYNAMIC APP_SUMMARY PARSING FIXED ---
+                            static QStringList appSummaryHeaders;
 
+                            if (subcurrentsection == "" && str.toLower().contains("app_summary"))
+                            {
+                                subcurrentsection = "appsummary";
+                                appSummaryHeaders.clear();
+                            }
+                            else if (subcurrentsection == "appsummary" && appSummaryHeaders.isEmpty())
+                            {
+                                // This is the header line, e.g. "Pss(KB) Rss(KB)"
+                                appSummaryHeaders = str.simplified().split(QRegularExpression("\\s+"));
+                            }
+                            else if (subcurrentsection == "appsummary" && str.contains("------"))
+                            {
+                                // skip the dashed line
+                            }
+                            else if (subcurrentsection == "appsummary")
+                            {
+                                // Handle TOTAL line (may appear after main rows)
+                                if (str.contains("TOTAL"))
+                                {
+                                    // Example: TOTAL_PSS: 699389 TOTAL_RSS: 619779 TOTAL_SWAP_PSS: 322743
+                                    QStringList totalTokens = str.simplified().split(QRegularExpression("\\s+"));
+                                    for (int i = 0; i < totalTokens.size(); ++i)
+                                    {
+                                        if (totalTokens[i].contains(":"))
+                                        {
+                                            QString header = "App_Summary|" + totalTokens[i].left(totalTokens[i].length() - 1); // Remove ':'
+                                            headerLine += header + ",";
+                                            if (i + 1 < totalTokens.size())
+                                                dataLine += totalTokens[i + 1] + ",";
+                                        }
+                                    }
+                                    subcurrentsection = "";
+                                    appSummaryHeaders.clear();
                                 }
+                                // Handle regular App_Summary rows
+                                else
+                                {
+                                    QStringList tokens = str.simplified().split(QRegularExpression("\\s+"));
+                                    if (!tokens.isEmpty())
+                                    {
+                                        QString rowLabel = tokens[0];
+                                        if (rowLabel.endsWith(":"))
+                                            rowLabel.chop(1); // remove trailing ':'
+                                        for (int i = 1; i < tokens.size() && i <= appSummaryHeaders.size(); ++i)
+                                        {
+                                            headerLine += QString("App_Summary|%1|%2,").arg(rowLabel, appSummaryHeaders[i - 1]);
+                                            dataLine += tokens[i] + ",";
+                                        }
+                                    }
+                                }
+                            }
 
                             if (subcurrentsection == "" && str.contains("Objects"))
                                 {
@@ -1946,8 +1977,8 @@ void adbViewer::on_dumpsysProcTimer()
 
 
             QTextStream cout(stdout);
-            cout << headerLine << endl;
-            cout << dataLine << endl;
+            cout << headerLine << Qt::endl;
+            cout << dataLine << Qt::endl;
             //fill in table
             QStringList headerLineList = headerLine.split(",");
             QStringList dataLineList = dataLine.split(",");
@@ -1984,6 +2015,10 @@ void adbViewer::on_dumpsysProcTimer()
 
 
                         }
+                }
+                else
+            {
+                qWarning()<<"Data mismatch --- "<<"headerLineList.count():"<<headerLineList.count()<<"; dataLineList.count():"<<dataLineList.count();
                 }
 
 
@@ -2023,7 +2058,7 @@ void adbViewer::on_dumpsysProcTimer()
                             logLine = logLine.left(logLine.length() - 1);
                         }
                     QTextStream cout(stdout);
-                    cout << headersList << endl << logLine << endl;
+                    cout << headersList << Qt::endl << logLine << Qt::endl;
                     writeStatCSV(namecur + "_" + pidcur + "_dumpsys", logLine, headersList);
                 }
             emit processDumpsysStatNewData(headersList, logLine);
@@ -2041,7 +2076,7 @@ void adbViewer::on_dumpsysProcTimer()
     else
         {
             QTextStream cout(stdout);
-            cout << "No such process or incorrect output" << endl;
+            cout << "No such process or incorrect output" << Qt::endl;
         }
 }
 
@@ -2078,7 +2113,7 @@ void adbViewer::on_RewriteFullFileSignal(QString strPath, QString appendString)
     QFile outFile(filters_list_filepath + "/" + strPath);
     outFile.open(QIODevice::WriteOnly);
     QTextStream textStream(&outFile);
-    textStream << appendString << endl;
+    textStream << appendString << Qt::endl;
     outFile.close();
 }
 
@@ -2097,7 +2132,7 @@ void adbViewer::on_rememberFilter_toolbutton_clicked()
             int index = 0;
             index =  filterCondition_combobox->findText(currenttext);
             QTextStream cout(stdout);
-            cout << "selection comboBox_env: " + QString::number(index) << endl;
+            cout << "selection comboBox_env: " + QString::number(index) << Qt::endl;
             if (index != -1)     // -1 for not found
                 {
 
@@ -2107,7 +2142,7 @@ void adbViewer::on_rememberFilter_toolbutton_clicked()
             else
                 {
                     QTextStream cout(stdout);
-                    cout << "index not found!!!" << endl;
+                    cout << "index not found!!!" << Qt::endl;
                 }
 
         }
@@ -2130,7 +2165,7 @@ void adbViewer::on_deleteFilter_toolbutton_clicked()
     int index = 0;
     index =  filterCondition_combobox->findText(currenttext);
     QTextStream cout(stdout);
-    cout << "selection comboBox_env: " + QString::number(index) << endl;
+    cout << "selection comboBox_env: " + QString::number(index) << Qt::endl;
     if (index != -1)     // -1 for not found
         {
 
@@ -2139,7 +2174,7 @@ void adbViewer::on_deleteFilter_toolbutton_clicked()
     else
         {
             QTextStream cout(stdout);
-            cout << "index not found!!!" << endl;
+            cout << "index not found!!!" << Qt::endl;
         }
     updateFilters();
 
@@ -2155,7 +2190,7 @@ void adbViewer::updateFilters()
             saveItems = saveItems + filterCondition_combobox->itemText(i) + "," + ((filterCondition_combobox->itemData(i).toBool()) ? QString("true") : QString("false")) + "\n";
         }
     QTextStream cout(stdout);
-    cout << saveItems << endl;
+    cout << saveItems << Qt::endl;
     emit RewriteFullFileSignal("filters_list", saveItems);
 }
 
@@ -2207,12 +2242,12 @@ QString adbViewer::whereAdbExists()
 {
     QString returnpath = "";
     QTextStream cout(stdout);
-    cout << "Choosing ADB path" << endl;
+    cout << "Choosing ADB path" << Qt::endl;
     QSettings s;
     if (s.contains("adbPath"))
         {
             returnpath = s.value("adbPath").toString();
-            cout << "adb overided by settings: " << returnpath << endl;
+            cout << "adb overided by settings: " << returnpath << Qt::endl;
             return returnpath;
         }
     QStringList adbPath = QStringList();
@@ -2258,7 +2293,7 @@ QString adbViewer::whereAdbExists()
                 }
         }
 #endif
-    cout << "adb found: " << returnpath << endl;
+    cout << "adb found: " << returnpath << Qt::endl;
     return returnpath;
 }
 
@@ -2276,13 +2311,13 @@ void adbViewer::getDeviceInfo(int)
     QString resultAndroidVersion;
     resultAndroidVersion = executeADBCommand(commandAndroidVersion).simplified();
     setandroidVersion(resultAndroidVersion);
-    cout << resultAndroidVersion << endl;
+    cout << resultAndroidVersion << Qt::endl;
 
     QString commandSDKVersion = "-s " + devicesList_combobox->currentText() + " shell getprop ro.build.version.sdk";
     QString resultSDKVersion;
     resultSDKVersion = executeADBCommand(commandSDKVersion).simplified();
     setandroidSDK(resultSDKVersion);
-    cout << resultSDKVersion << endl;
+    cout << resultSDKVersion << Qt::endl;
 
     //find out top version
     //as far as I know there is three main tops that leads to such cases
@@ -2323,8 +2358,8 @@ void adbViewer::getDeviceInfo(int)
             topCommand = " top ";
         }
     settopVersion(resultTopVersion);
-    cout << resultTopVersion << endl;
-    cout << topCommand << endl;
+    cout << resultTopVersion << Qt::endl;
+    cout << topCommand << Qt::endl;
 }
 
 void adbViewer::on_androidSDKChanged(QString androidSDK)
