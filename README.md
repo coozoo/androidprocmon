@@ -27,10 +27,7 @@ sudo apt-get install androidprocmon
 
 You can get precompiled package for other OS here:
 
-https://github.com/coozoo/androidprocmon/releases
-
-[![Build Status](https://travis-ci.com/coozoo/androidprocmon.svg?branch=master)](https://travis-ci.com/coozoo/androidprocmon)
-
+[<img src="https://github.com/coozoo/androidprocmon/workflows/Release_Version/badge.svg"></img>](https://github.com/coozoo/androidprocmon/releases/latest)
 
 If you prefer to compile it by yourself then see below. 
 
