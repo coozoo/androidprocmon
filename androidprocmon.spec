@@ -112,7 +112,7 @@ So it's very good when you need to test your application on android device and m
     %doc README.md
     %{_bindir}/*
     %{_datadir}/*
-    %{_datadir}/applications/qtrfpowermeter.desktop
+    %{_datadir}/applications/androidprocmon.desktop
 %endif
 
 %changelog

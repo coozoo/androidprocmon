@@ -1,0 +1,14 @@
+Source: androidprocmon
+Section: devel
+Priority: optional
+Maintainer: Yuriy Kuzin <yuriykuzin@yahoo.com>
+Build-Depends: debhelper (>= 9), qt6-base-dev, libqt6opengl6-dev, qt6-tools-dev, qt6-tools-dev-tools, qt6-l10n-tools, libgl1-mesa-dev, libqt6charts6-dev, libssl-dev
+Standards-Version: 3.9.8
+Homepage: https://github.com/coozoo/androidprocmon
+
+Package: androidprocmon
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libqt6core6, libqt6gui6, libqt6widgets6, libqt6charts6, libqt6opengl6, libgl1-mesa-dev, libssl3
+Description: This a tool that allow monitoring of android application with logging possibility through ADB. Actually it's some kind of UI for adb and tools on android device - top and dumpsys. There is chart representation of live data, possibility to execute command on device and some kind of interface for logcat. So it's very good when you need to test your application on android device and monitor resources.
+ Icons: images/computer.png
+ 

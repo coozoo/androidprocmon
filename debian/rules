@@ -1,0 +1,14 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	qmake6 PREFIX=/usr
+
+override_dh_auto_install:
+	dh_auto_install
+	# Create the directory structure for installing the icon file
+	install -d $(CURDIR)/debian/qtrfpowermeter/usr/share/icons/hicolor/scalable/apps/
+	# Copy the icon file to the appropriate directory in the package
+	install -m 644 $(CURDIR)/images/computer.png $(CURDIR)/debian/qtrfpowermeter/usr/share/icons/hicolor/scalable/apps/computer.png
