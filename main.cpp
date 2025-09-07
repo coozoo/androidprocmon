@@ -16,7 +16,8 @@ void qtLogger(QtMsgType type, const QMessageLogContext &context, const QString &
     QByteArray localMsg = msg.toLocal8Bit();
     const char *file = context.file ? context.file : "";
     const char *function = context.function ? context.function : "";
-    const char *timestamp = QDateTime::currentDateTime().toString(Qt::DateFormat::ISODate).toUtf8();
+    QByteArray timestampBytes = QDateTime::currentDateTime().toString(Qt::DateFormat::ISODate).toUtf8();
+    const char *timestamp = timestampBytes.constData();
     const char *level = "n/a";
 
     switch (type)
