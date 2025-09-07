@@ -133,6 +133,8 @@ mainContainer::mainContainer(QWidget *parent) : QWidget(parent), ui(new Ui::main
     connect(showhideDump, SIGNAL(clicked()), this, SLOT(on_showhidebuttons_clicked()));
     connect(range_spinbox, SIGNAL(valueChanged(int)), this, SLOT(on_range_spinbox_valueChanged(int)));
     connect(savechartimages_toolbutton, SIGNAL(clicked()), this, SLOT(on_savechartimages_toolbutton_clicked()));
+    connect(flow_checkbox,&QCheckBox::stateChanged,chartsTop,&chartManager::setisflow);
+    connect(flow_checkbox,&QCheckBox::stateChanged,chartsDumpsys,&chartManager::setisflow);
 
 }
 
