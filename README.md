@@ -11,10 +11,17 @@ It's a tool that allow monitoring of android application with logging possibilit
 
 Precompiled RPMs (Fedora,RHEL etc) can be found in COPR click below:
 
-
 ```
 $ sudo dnf copr enable yura/androidprocmon
 $ sudo dnf install androidprocmon
+```
+
+Ubuntu add repo
+
+```
+sudo add-apt-repository ppa:coozoo/androidprocmon
+sudo apt update
+sudo apt-get install androidprocmon
 ```
 
 You can get precompiled package for other OS here:
